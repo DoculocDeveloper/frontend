@@ -20,7 +20,7 @@ import {
 import { formatCurrency, formatDate, formatDocument } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { RentalApplication } from "@/types/doculoc";
-import { ApplicationStatusBadge, RecommendationBadge } from "./application-status-badge";
+import { ApplicationStatusBadge } from "./application-status-badge";
 
 function MobileInfo({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -58,8 +58,12 @@ function ApplicationMobileCard({
           <p className="wrap-break-word text-base font-semibold text-foreground">
             {formatDocument(application.document, application.documentType)}
           </p>
+          {application.tenantName ? (
+            <p className="truncate text-xs text-muted-foreground">{application.tenantName}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{application.documentType}</p>
+          )}
           <div className="mt-2 flex flex-wrap gap-2">
-            <RecommendationBadge recommendation={application.recommendation} />
             <ApplicationStatusBadge status={application.status} />
           </div>
         </div>
@@ -134,7 +138,9 @@ export function ApplicationsTable({
                 <div className="truncate font-medium text-foreground">
                   {formatDocument(application.document, application.documentType)}
                 </div>
-                <div className="text-xs text-muted-foreground">{application.documentType}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {application.tenantName || application.documentType}
+                </div>
               </div>
             </div>
           );
@@ -146,18 +152,13 @@ export function ApplicationsTable({
         cell: ({ row }) => (
           <div>
             <div className="font-medium">{formatCurrency(row.original.requestedExpense)}</div>
-            <div className="text-xs text-muted-foreground">Aluguel + condomínio + taxas</div>
+            <div className="text-xs text-muted-foreground">Aluguel + condomínio + IPTU</div>
           </div>
         ),
       },
       {
-        accessorKey: "recommendation",
-        header: "Resultado",
-        cell: ({ row }) => <RecommendationBadge recommendation={row.original.recommendation} />,
-      },
-      {
         accessorKey: "status",
-        header: "Status",
+        header: "Status atual",
         cell: ({ row }) => <ApplicationStatusBadge status={row.original.status} />,
       },
       {

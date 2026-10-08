@@ -92,9 +92,9 @@ export function RealEstateDashboard() {
           icon={<ClipboardList className="size-5" />}
         />
         <MetricCard
-          label="Para contrato"
+          label="Aprovadas para contrato"
           value={waitingContractData}
-          description="Aguardando seus dados"
+          description="Aguardando dados da locação"
           icon={<FileClock className="size-5" />}
         />
         <MetricCard
