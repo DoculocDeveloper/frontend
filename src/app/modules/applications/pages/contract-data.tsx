@@ -184,8 +184,8 @@ export function ContractDataPage() {
         </Button>
         <PageHeader
           eyebrow="Contrato"
-          title="Aprovado para contrato"
-          description="Cadastro aprovado. Complete os dados do locatário e do imóvel para que o admin possa gerar o contrato."
+          title="Preencher dados para contrato"
+          description="Complete os dados do locatário e do imóvel. Depois disso, o caso segue para geração do contrato pelo admin."
         />
       </div>
 
