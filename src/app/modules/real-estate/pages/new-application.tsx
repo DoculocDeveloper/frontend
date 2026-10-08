@@ -109,11 +109,11 @@ export function NewApplicationPage() {
       const recommended = data.application.recommendation === "RECOMMENDED";
 
       toast.success(
-        recommended ? "Consulta recomendada." : "Consulta não recomendada.",
+        recommended ? "Consulta recomendada." : "Consulta em análise.",
         {
           description: recommended
             ? "Agora preencha os dados para o contrato."
-            : "Você pode contestar a decisão no detalhe da consulta.",
+            : "A análise está em verificação pela equipe Doculoc.",
         },
       );
       navigate(`/real_estate/consultas/${data.application.id}`);
