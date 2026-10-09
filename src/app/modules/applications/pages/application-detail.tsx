@@ -101,7 +101,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const canContest = !isAdmin && application.status === "REJECTED";
   const canFillContract = !isAdmin && application.status === "WAITING_CONTRACT_DATA";
   const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
-  const canAdminDecide = isAdmin && ["REJECTED", "CONTESTED"].includes(application.status);
+  const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
   const canDownload = application.status === "CONTRACT_GENERATED" && application.contract?.id && isAdmin;
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
