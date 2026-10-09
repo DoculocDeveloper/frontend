@@ -27,7 +27,7 @@ import { applicationStatusDescriptions, applicationStatusLabels } from "@/lib/st
 import { getApiErrorMessage } from "@/services/api";
 import { downloadContract, generateContract } from "@/services/contracts";
 import { getRentalApplication } from "@/services/rental-applications";
-import { ApplicationStatusBadge, RecommendationBadge } from "../components/application-status-badge";
+import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
 
 function DetailItem({ label, value }: { label: string; value?: string | number | null }) {
@@ -171,7 +171,6 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                 Resultado da análise
               </CardTitle>
               <div className="flex flex-wrap gap-2">
-                <RecommendationBadge recommendation={application.recommendation} />
                 <ApplicationStatusBadge status={application.status} />
               </div>
             </div>
