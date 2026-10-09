@@ -7,6 +7,7 @@ import LoginPage from "./app/modules/auth/pages/login";
 import RegisterPage from "./app/modules/auth/pages/register";
 import { Dashboard } from "./app/modules/admin/pages/dashboard";
 import { RealEstateDashboard } from "./app/modules/real-estate/pages/dashboard";
+import { RealEstateSettingsPage } from "./app/modules/real-estate/pages/settings";
 import { NewApplicationPage } from "./app/modules/real-estate/pages/new-application";
 import { ApplicationsPage } from "./app/modules/applications/pages/applications-page";
 import { ApplicationDetailPage } from "./app/modules/applications/pages/application-detail";
@@ -76,6 +77,10 @@ export const router = createBrowserRouter([
       {
         path: "consultas/:applicationId/contestar",
         element: <ContestApplicationPage />,
+      },
+      {
+        path: "configuracoes",
+        element: <RealEstateSettingsPage />,
       },
     ],
   },

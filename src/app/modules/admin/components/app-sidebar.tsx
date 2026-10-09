@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MessageSquareWarning,
   PlusCircle,
+  Settings,
 } from "lucide-react";
 
 import doculocLogo from "@/assets/logo.svg";
@@ -63,6 +64,11 @@ const realEstateItems: NavItem[] = [
     title: "Minhas consultas",
     href: "/real_estate/consultas",
     icon: ClipboardList,
+  },
+  {
+    title: "Configurações",
+    href: "/real_estate/configuracoes",
+    icon: Settings,
   },
 ];
 

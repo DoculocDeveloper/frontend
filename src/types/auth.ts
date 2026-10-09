@@ -6,6 +6,7 @@ export type RealEstateProfile = {
   cnpj?: string | null;
   phone?: string | null;
   responsibleName?: string | null;
+  signatureEmail?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
