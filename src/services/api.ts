@@ -8,11 +8,28 @@ type ApiErrorResponse = {
   error?: boolean;
   message?: string;
   code?: string;
+  issues?: {
+    formErrors?: string[];
+    fieldErrors?: Record<string, string[]>;
+  };
 };
 
 export function getApiErrorMessage(error: unknown) {
   if (error instanceof AxiosError) {
     const data = error.response?.data as ApiErrorResponse | undefined;
+
+    if (data?.issues?.fieldErrors) {
+      for (const messages of Object.values(data.issues.fieldErrors)) {
+        if (messages && messages.length > 0) {
+          return messages[0];
+        }
+      }
+    }
+
+    if (data?.issues?.formErrors && data.issues.formErrors.length > 0) {
+      return data.issues.formErrors[0];
+    }
+
     return data?.message ?? error.message;
   }
 

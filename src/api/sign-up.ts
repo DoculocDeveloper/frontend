@@ -7,6 +7,7 @@ export interface SignUpBody {
   realEstateProfile?: {
     name: string
     cnpj: string
+    document?: string
     phone: string
     responsibleName: string
   }
@@ -17,6 +18,11 @@ export async function signUp({ email, password, role, realEstateProfile }: SignU
     email,
     password,
     role,
-    realEstateProfile
+    realEstateProfile: realEstateProfile
+      ? {
+          ...realEstateProfile,
+          document: realEstateProfile.cnpj,
+        }
+      : undefined,
   });
 }

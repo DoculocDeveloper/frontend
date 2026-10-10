@@ -19,7 +19,7 @@ import { Building2, FileText, Loader2, Mail, SquareUser } from "lucide-react";
 // API
 import { signUp } from "@/api/sign-up";
 
-// Libs
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -27,16 +27,25 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { onlyDigits } from "@/lib/format";
+import { getApiErrorMessage } from "@/services/api";
+
 const signUpForm = z.object({
-  email: z.email(),
-  password: z.string().min(8),
+  email: z.string().email("Informe um e-mail válido."),
+  password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
   role: z.enum(["REAL_ESTATE", "ADMIN"]),
   realEstateProfile: z
     .object({
-      name: z.string(),
-      cnpj: z.string(),
-      phone: z.string(),
-      responsibleName: z.string(),
+      name: z.string().min(3, "O nome da imobiliária deve ter pelo menos 3 caracteres."),
+      cnpj: z
+        .string()
+        .min(1, "Informe o CNPJ.")
+        .refine(
+          (val) => onlyDigits(val).length === 14,
+          "CNPJ deve conter exatamente 14 dígitos.",
+        ),
+      phone: z.string().min(8, "Informe um telefone válido com DDD."),
+      responsibleName: z.string().min(3, "O nome do responsável deve ter pelo menos 3 caracteres."),
     })
     .optional(),
 });
@@ -53,6 +62,7 @@ export function RegisterForm({
     handleSubmit,
     formState: { isSubmitting, errors },
   } = useForm<SignUpForm>({
+    resolver: zodResolver(signUpForm),
     defaultValues: {
       email: "",
       password: "",
@@ -81,7 +91,7 @@ export function RegisterForm({
         }
       });
     } catch (error) {
-      toast.error("Erro ao cadastrar usuário!");
+      toast.error(getApiErrorMessage(error));
       console.log(error);
     }
   }
@@ -122,10 +132,7 @@ export function RegisterForm({
           </FieldDescription>
         )}
         <Field>
-          <div className="flex justify-between">
-            <FieldLabel htmlFor="real-estate-cnpj">CNPJ</FieldLabel>
-            <FieldDescription>&#40;Opcional&#41;</FieldDescription>
-          </div>
+          <FieldLabel htmlFor="real-estate-cnpj">CNPJ</FieldLabel>
           <InputGroup>
             <InputGroupAddon>
               <FileText />
@@ -134,10 +141,16 @@ export function RegisterForm({
               id="real-estate-cnpj"
               type="text"
               placeholder="00.000.000/0000-00"
+              required
               {...register("realEstateProfile.cnpj")}
             />
           </InputGroup>
         </Field>
+        { errors.realEstateProfile?.cnpj && (
+          <FieldDescription className="text-rose-500">
+            {errors.realEstateProfile.cnpj.message}
+          </FieldDescription>
+        )}
         <Field>
           <FieldLabel htmlFor="responsible-name">
             Nome do responsável
