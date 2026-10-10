@@ -146,13 +146,29 @@ export async function fillContractData(
   applicationId: string,
   body: ContractDataBody,
 ) {
+  const cleanDocument = onlyDigits(body.tenantDocument);
+  const cleanPhone = onlyDigits(body.tenantPhone);
+  const cleanZipCode = onlyDigits(body.propertyZipCode);
+
   const response = await api.patch<{ application: RentalApplication }>(
     `/rental-applications/${applicationId}/contract-data`,
     {
-      ...body,
-      tenantDocument: onlyDigits(body.tenantDocument),
-      tenantPhone: onlyDigits(body.tenantPhone),
-      propertyZipCode: onlyDigits(body.propertyZipCode),
+      tenants: [
+        {
+          name: body.tenantName.trim(),
+          document: cleanDocument,
+          email: body.tenantEmail.trim(),
+          phone: cleanPhone,
+        },
+      ],
+      propertyZipCode: cleanZipCode,
+      propertyStreet: body.propertyStreet.trim(),
+      propertyNumber: body.propertyNumber.trim(),
+      propertyComplement: body.propertyComplement?.trim() || undefined,
+      propertyNeighborhood: body.propertyNeighborhood.trim(),
+      propertyCity: body.propertyCity.trim(),
+      propertyState: body.propertyState.trim().toUpperCase(),
+      adhesionFee: 0,
     },
   );
 
