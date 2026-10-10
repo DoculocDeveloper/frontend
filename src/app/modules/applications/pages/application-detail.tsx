@@ -7,9 +7,11 @@ import {
   ClipboardList,
   Download,
   FileText,
+  FileCheck2,
   Home,
   Loader2,
   MessageSquareWarning,
+  Send,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -18,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -25,7 +28,7 @@ import { EmptyState, PageHeader, PageShell } from "@/app/modules/_components/pag
 import { formatCurrency, formatDate, formatDocument, normalizeReasons } from "@/lib/format";
 import { applicationStatusDescriptions, applicationStatusLabels } from "@/lib/status";
 import { getApiErrorMessage } from "@/services/api";
-import { downloadContract, generateContract } from "@/services/contracts";
+import { downloadContract, generateContract, sendContractToSignature } from "@/services/contracts";
 import { getRentalApplication } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
@@ -57,6 +60,16 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
       await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
       await queryClient.invalidateQueries({ queryKey: ["rental-applications"] });
       toast.success("Contrato gerado com sucesso.");
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  });
+
+  const sendSignatureMutation = useMutation({
+    mutationFn: () => sendContractToSignature(application?.contract?.id ?? ""),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
+      await queryClient.invalidateQueries({ queryKey: ["rental-applications"] });
+      toast.success("Contrato enviado para assinatura via Clicksign!");
     },
     onError: (error) => toast.error(getApiErrorMessage(error)),
   });
@@ -102,7 +115,15 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const canFillContract = !isAdmin && application.status === "WAITING_CONTRACT_DATA";
   const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
   const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
-  const canDownload = application.status === "CONTRACT_GENERATED" && application.contract?.id && isAdmin;
+  const contract = application.contract;
+  const isContractGenerated = application.status === "CONTRACT_GENERATED" && Boolean(contract?.id);
+  const canDownload = isContractGenerated && isAdmin;
+  const canSendSignature =
+    isContractGenerated &&
+    isAdmin &&
+    (!contract?.signatureStatus ||
+      contract.signatureStatus === "NOT_SENT" ||
+      contract.signatureStatus === "ERROR");
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
 
@@ -156,6 +177,32 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   <Download className="size-4" />
                   Baixar contrato
                 </Button>
+              ) : null}
+              {canSendSignature ? (
+                <Button
+                  onClick={() => sendSignatureMutation.mutate()}
+                  disabled={sendSignatureMutation.isPending}
+                  className="beam-button shadow-lg shadow-primary/15"
+                >
+                  {sendSignatureMutation.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  Enviar para assinatura
+                </Button>
+              ) : null}
+              {isContractGenerated &&
+              contract?.signatureStatus &&
+              ["SENT", "PARTIALLY_SIGNED", "ENVELOPE_CREATED"].includes(contract.signatureStatus) ? (
+                <Badge variant="outline" className="h-10 px-4 border-indigo-200 bg-indigo-50 text-indigo-700 font-medium">
+                  Aguardando assinaturas
+                </Badge>
+              ) : null}
+              {isContractGenerated && contract?.signatureStatus === "SIGNED" ? (
+                <Badge variant="outline" className="h-10 px-4 border-emerald-200 bg-emerald-50 text-emerald-700 font-medium">
+                  Contrato assinado
+                </Badge>
               ) : null}
             </div>
           }
@@ -219,6 +266,26 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
               <DetailItem label="Status atual" value={applicationStatusLabels[application.status]} />
               <DetailItem label="Criada em" value={formatDate(application.createdAt)} />
               <DetailItem label="Atualizada em" value={formatDate(application.updatedAt)} />
+              {contract?.signatureStatus ? (
+                <DetailItem
+                  label="Assinatura Clicksign"
+                  value={
+                    contract.signatureStatus === "SIGNED"
+                      ? "Assinado"
+                      : contract.signatureStatus === "SENT"
+                      ? "Enviado para assinatura"
+                      : contract.signatureStatus === "PARTIALLY_SIGNED"
+                      ? "Parcialmente assinado"
+                      : contract.signatureStatus === "ENVELOPE_CREATED"
+                      ? "Envelope criado"
+                      : contract.signatureStatus === "ERROR"
+                      ? `Erro: ${contract.signatureError ?? "Falha no envio"}`
+                      : contract.signatureStatus === "CANCELLED"
+                      ? "Cancelado"
+                      : "Pendente de envio"
+                  }
+                />
+              ) : null}
               {application.adminDecisionReason ? (
                 <Alert className="border-primary/20 bg-primary/5">
                   <AlertTitle>Decisão administrativa</AlertTitle>
@@ -309,6 +376,49 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             )}
           </CardContent>
         </Card>
+
+        {contract?.signers && contract.signers.length > 0 ? (
+          <Card className="bg-white/85 shadow-sm lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck2 className="size-5 text-primary" />
+                Signatários do contrato (Clicksign)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {contract.signers.map((signer) => (
+                  <div key={signer.id} className="rounded-2xl border bg-stone-50/70 p-4 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {signer.role === "TENANT"
+                          ? "Locatário"
+                          : signer.role === "REAL_ESTATE"
+                          ? "Imobiliária"
+                          : "DocuLoc"}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={
+                          signer.signedAt
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]"
+                            : "border-amber-200 bg-amber-50 text-amber-700 text-[10px]"
+                        }
+                      >
+                        {signer.signedAt ? "Assinado" : "Pendente"}
+                      </Badge>
+                    </div>
+                    <p className="font-medium text-sm text-foreground truncate">{signer.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{signer.email}</p>
+                    {signer.signedAt ? (
+                      <p className="text-[11px] text-emerald-600">Assinado em {formatDate(signer.signedAt)}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </PageShell>
   );

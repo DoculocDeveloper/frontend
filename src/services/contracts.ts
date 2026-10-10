@@ -12,6 +12,14 @@ export async function generateContract(applicationId: string) {
   return response.data.contract;
 }
 
+export async function sendContractToSignature(contractId: string) {
+  const response = await api.post<{ contract: Contract }>(
+    `/contracts/${contractId}/signature/send`,
+  );
+
+  return response.data.contract;
+}
+
 function getFileNameFromContentDisposition(
   contentDisposition?: string,
   fallbackFileName = "contrato-doculoc.docx",

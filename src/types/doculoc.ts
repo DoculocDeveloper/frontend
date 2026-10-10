@@ -23,6 +23,29 @@ export type ApplicationRequester = Pick<AuthUser, "id" | "name" | "email"> & {
   realEstateProfile?: RealEstateProfile | null;
 };
 
+export type ContractSignatureStatus =
+  | "NOT_SENT"
+  | "ENVELOPE_CREATED"
+  | "SENT"
+  | "PARTIALLY_SIGNED"
+  | "SIGNED"
+  | "ACTION_REQUIRED"
+  | "REFUSED"
+  | "CANCELLED"
+  | "ERROR";
+
+export type ContractSigner = {
+  id: string;
+  contractId: string;
+  role: "TENANT" | "REAL_ESTATE" | "DOCULOC";
+  name: string;
+  email: string;
+  phone?: string | null;
+  document?: string | null;
+  status?: string | null;
+  signedAt?: string | null;
+};
+
 export type Contract = {
   id: string;
   applicationId: string;
@@ -33,6 +56,13 @@ export type Contract = {
   generatedById?: string | null;
   generatedAt?: string | null;
   errorMessage?: string | null;
+  clicksignEnvelopeId?: string | null;
+  clicksignDocumentId?: string | null;
+  signatureStatus?: ContractSignatureStatus | null;
+  signatureError?: string | null;
+  sentToSignatureAt?: string | null;
+  signedAt?: string | null;
+  signers?: ContractSigner[];
   createdAt?: string;
   updatedAt?: string;
 };
