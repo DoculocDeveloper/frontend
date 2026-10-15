@@ -130,12 +130,12 @@ export function ApplicationsTable({
           const application = row.original;
 
           return (
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="shrink-0 rounded-2xl border bg-primary/5 p-2 text-primary">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="shrink-0 rounded-xl border bg-primary/5 p-1.5 text-primary">
                 <FileText className="size-4" />
               </div>
               <div className="min-w-0">
-                <div className="truncate font-medium text-foreground">
+                <div className="truncate font-medium text-sm text-foreground">
                   {formatDocument(application.document, application.documentType)}
                 </div>
                 <div className="truncate text-xs text-muted-foreground">
@@ -150,9 +150,11 @@ export function ApplicationsTable({
         accessorKey: "requestedExpense",
         header: "Pacote",
         cell: ({ row }) => (
-          <div>
-            <div className="font-medium">{formatCurrency(row.original.requestedExpense)}</div>
-            <div className="text-xs text-muted-foreground">Aluguel + condomínio + IPTU</div>
+          <div className="whitespace-nowrap">
+            <div className="font-medium text-sm text-foreground">
+              {formatCurrency(row.original.requestedExpense)}
+            </div>
+            <div className="text-[0.68rem] text-muted-foreground">Aluguel + encargos</div>
           </div>
         ),
       },
@@ -164,32 +166,46 @@ export function ApplicationsTable({
       {
         accessorKey: "createdAt",
         header: "Criada em",
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">{formatDate(row.original.createdAt)}</span>
-        ),
+        cell: ({ row }) => {
+          const formatted = formatDate(row.original.createdAt);
+          if (formatted === "-") {
+            return <span className="text-muted-foreground">-</span>;
+          }
+          const [date, time] = formatted.split(", ");
+
+          return (
+            <div className="text-xs leading-tight whitespace-nowrap">
+              <div className="font-medium text-foreground">{date}</div>
+              {time ? (
+                <div className="text-[0.68rem] text-muted-foreground">{time}</div>
+              ) : null}
+            </div>
+          );
+        },
       },
       {
         id: "actions",
-        header: "Ações",
+        header: () => <div className="text-right pr-4">Ações</div>,
         cell: ({ row }) => {
           const application = row.original;
           const hasContract = application.status === "CONTRACT_GENERATED" && application.contract?.id;
 
           return (
-            <div className="flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-1.5 whitespace-nowrap pr-4">
               {hasContract && onDownloadContract && isAdmin ? (
                 <Button
                   variant="outline"
                   size="icon-sm"
                   title="Baixar contrato"
+                  className="h-8 w-8 rounded-xl"
                   onClick={() => onDownloadContract(application)}
                 >
                   <Download className="size-4" />
                 </Button>
               ) : null}
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="h-8 px-2.5 rounded-xl text-xs">
                 <Link to={`${basePath}/consultas/${application.id}`}>
-                  <Eye className="size-4" />
+                  <Eye className="size-3.5" />
                   Ver
                 </Link>
               </Button>
@@ -209,12 +225,12 @@ export function ApplicationsTable({
         const profileName = requester?.realEstateProfile?.name ?? requester?.name ?? "-";
 
         return (
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="shrink-0 rounded-2xl bg-stone-100 p-2 text-stone-600">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="shrink-0 rounded-xl bg-stone-100 p-1.5 text-stone-600">
               <Building2 className="size-4" />
             </div>
-            <div className="min-w-0 max-w-56">
-              <div className="truncate font-medium text-foreground">{profileName}</div>
+            <div className="min-w-0 max-w-44 xl:max-w-60">
+              <div className="truncate font-medium text-sm text-foreground">{profileName}</div>
               <div className="truncate text-xs text-muted-foreground">{requester?.email ?? "Sem e-mail"}</div>
             </div>
           </div>
@@ -246,12 +262,15 @@ export function ApplicationsTable({
       </div>
 
       <div className="hidden overflow-hidden rounded-3xl border bg-white/85 shadow-sm backdrop-blur lg:block">
-        <Table className={cn("min-w-190", isAdmin && "min-w-245")}>
+        <Table className={cn("w-full")}>
           <TableHeader className="bg-stone-50/80">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  <TableHead
+                    key={header.id}
+                    className="h-11 px-3 text-xs uppercase tracking-[0.14em] text-muted-foreground"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -264,7 +283,7 @@ export function ApplicationsTable({
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} className="bg-white/70">
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className="px-3 py-2.5">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

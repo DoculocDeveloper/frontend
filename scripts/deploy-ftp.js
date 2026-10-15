@@ -8,18 +8,18 @@ async function runDeploy() {
   const user = process.env.FTP_USER;
   const password = process.env.FTP_PASSWORD;
   const port = process.env.FTP_PORT ? Number(process.env.FTP_PORT) : 21;
-  const remoteDir = process.env.FTP_REMOTE_DIR || "public_html";
+  const remoteDir = process.env.FTP_REMOTE_DIR || "app.doculoc.com.br";
   const secure = process.env.FTP_SECURE === "true";
 
   if (!host || !user || !password) {
     console.error("\n❌ ERRO: Credenciais de FTP não encontradas no arquivo .env!\n");
     console.error("Por favor, adicione as seguintes variáveis no seu frontend/.env:\n");
-    console.error("  FTP_HOST=ftp.seudominio.com.br");
-    console.error("  FTP_USER=usuario@seudominio.com.br");
+    console.error("  FTP_HOST=ftp.doculoc.com.br");
+    console.error("  FTP_USER=deploy@doculoc.com.br");
     console.error("  FTP_PASSWORD=sua-senha");
     console.error("  FTP_PORT=21");
-    console.error("  FTP_REMOTE_DIR=public_html");
-    console.error("  FTP_SECURE=false  # ou true se a HostGator exigir FTPS/TLS\n");
+    console.error("  FTP_REMOTE_DIR=app.doculoc.com.br");
+    console.error("  FTP_SECURE=false\n");
     process.exit(1);
   }
 
@@ -30,7 +30,11 @@ async function runDeploy() {
   }
 
   const client = new ftp.Client();
-  client.ftp.verbose = false; // Defina como true se quiser ver os comandos FTP brutos no console
+  client.ftp.verbose = false;
+  // Aumenta o tempo limite de resposta para 60 segundos
+  client.ftp.timeout = 60000;
+  // Força modo passivo IPv4 (PASV), evitando timeout no EPSV da HostGator
+  client.prepareTransfer = ftp.enterPassiveModeIPv4;
 
   console.log(`\n🚀 Conectando ao FTP da HostGator (${host})...`);
 
@@ -42,27 +46,31 @@ async function runDeploy() {
       port,
       secure,
       secureOptions: {
-        rejectUnauthorized: false, // Permite certificados auto-assinados da HostGator
+        rejectUnauthorized: false,
       },
     });
 
     console.log(`✅ Conexão estabelecida com sucesso!`);
 
-    if (remoteDir && remoteDir !== "/" && remoteDir !== ".") {
-      console.log(`📁 Navegando para o diretório remoto: ${remoteDir}`);
-      await client.ensureDir(remoteDir);
+    const currentDir = await client.pwd();
+    console.log(`📁 Diretório FTP conectado: ${currentDir}`);
+
+    // Se já estiver na pasta alvo (conta FTP restrita), não cria subpasta
+    if (currentDir.endsWith(remoteDir) || currentDir.includes(remoteDir)) {
+      console.log(`✅ Já está posicionado na pasta do subdomínio: ${remoteDir}`);
     } else {
-      console.log(`📁 Enviando diretamente para a raiz da conta FTP`);
+      console.log(`📁 Entrando na pasta: ${remoteDir}`);
+      await client.ensureDir(remoteDir);
     }
 
-    console.log(`📤 Enviando arquivos do build ('dist')...`);
+    console.log(`📤 Enviando arquivos do build para '${remoteDir}'...`);
     const startTime = Date.now();
 
     await client.uploadFromDir(distPath);
 
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`\n🎉 Deploy concluído com sucesso em ${elapsedSeconds}s!`);
-    console.log(`🌐 O site já deve estar atualizado na HostGator.\n`);
+    console.log(`🌐 O site app.doculoc.com.br já está atualizado na HostGator.\n`);
   } catch (error) {
     console.error("\n❌ Erro durante o deploy via FTP:", error);
     process.exit(1);

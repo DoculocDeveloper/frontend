@@ -94,7 +94,7 @@ export function ApplicationsPage({
   const meta = data?.meta;
 
   return (
-    <PageShell>
+    <PageShell className="max-w-full">
       <Helmet title={title ?? (isAdmin ? "Consultas" : "Minhas consultas")} />
 
       <PageHeader
