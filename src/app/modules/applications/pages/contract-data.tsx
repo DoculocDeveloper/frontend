@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Home, Loader2, Save } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { ArrowLeft, Home, Loader2, Plus, Save, Trash2, Users } from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { fetchAddressByCep } from "@/services/cep";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader, PageShell } from "@/app/modules/_components/page-shell";
 import { formatDocument } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { getApiErrorMessage } from "@/services/api";
 import {
   fillContractData,
@@ -23,11 +24,18 @@ import {
 } from "@/services/rental-applications";
 import type { ContractDataBody } from "@/types/doculoc";
 
+const tenantSchema = z.object({
+  name: z.string().min(3, "Informe o nome completo."),
+  document: z.string().min(11, "Informe CPF ou CNPJ."),
+  email: z.string().email("Informe um e-mail válido."),
+  phone: z.string().min(10, "Informe um telefone válido com DDD."),
+});
+
 const contractDataSchema = z.object({
-  tenantName: z.string().min(3, "Informe o nome completo."),
-  tenantDocument: z.string().min(11, "Informe CPF ou CNPJ."),
-  tenantEmail: z.string().email("Informe um e-mail válido."),
-  tenantPhone: z.string().min(10, "Informe um telefone válido."),
+  tenants: z
+    .array(tenantSchema)
+    .min(1, "Informe pelo menos 1 locatário.")
+    .max(3, "É permitido informar no máximo 3 locatários."),
   propertyZipCode: z.string().min(8, "Informe o CEP."),
   propertyStreet: z.string().min(3, "Informe a rua."),
   propertyNumber: z.string().min(1, "Informe o número."),
@@ -54,10 +62,14 @@ export function ContractDataPage() {
   const form = useForm<ContractDataForm>({
     resolver: zodResolver(contractDataSchema),
     defaultValues: {
-      tenantName: "",
-      tenantDocument: "",
-      tenantEmail: "",
-      tenantPhone: "",
+      tenants: [
+        {
+          name: "",
+          document: "",
+          email: "",
+          phone: "",
+        },
+      ],
       propertyZipCode: "",
       propertyStreet: "",
       propertyNumber: "",
@@ -66,6 +78,11 @@ export function ContractDataPage() {
       propertyCity: "",
       propertyState: "",
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "tenants",
   });
 
   const [isFetchingCep, setIsFetchingCep] = useState(false);
@@ -81,11 +98,26 @@ export function ContractDataPage() {
   useEffect(() => {
     if (!application) return;
 
+    const initialTenants =
+      application.tenants && application.tenants.length > 0
+        ? application.tenants.map((t) => ({
+            name: t.name ?? "",
+            document: t.document ?? "",
+            email: t.email ?? "",
+            phone: t.phone ?? "",
+          }))
+        : [
+            {
+              name: application.tenantName ?? "",
+              document:
+                application.tenantDocument ?? application.document ?? "",
+              email: application.tenantEmail ?? "",
+              phone: application.tenantPhone ?? "",
+            },
+          ];
+
     form.reset({
-      tenantName: application.tenantName ?? "",
-      tenantDocument: application.tenantDocument ?? application.document ?? "",
-      tenantEmail: application.tenantEmail ?? "",
-      tenantPhone: application.tenantPhone ?? "",
+      tenants: initialTenants,
       propertyZipCode: application.propertyZipCode ?? "",
       propertyStreet: application.propertyStreet ?? "",
       propertyNumber: application.propertyNumber ?? "",
@@ -166,7 +198,16 @@ export function ContractDataPage() {
   });
 
   function handleSubmit(values: ContractDataForm) {
-    mutation.mutate(values);
+    mutation.mutate({
+      tenants: values.tenants,
+      propertyZipCode: values.propertyZipCode,
+      propertyStreet: values.propertyStreet,
+      propertyNumber: values.propertyNumber,
+      propertyComplement: values.propertyComplement,
+      propertyNeighborhood: values.propertyNeighborhood,
+      propertyCity: values.propertyCity,
+      propertyState: values.propertyState,
+    });
   }
 
   const isAllowed = application?.status === "WAITING_CONTRACT_DATA";
@@ -206,53 +247,135 @@ export function ContractDataPage() {
 
       <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-5">
         <Card className="bg-white/85 shadow-sm">
-          <CardHeader>
-            <CardTitle>Dados do locatário</CardTitle>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0 pb-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="size-5 text-primary" />
+                Dados dos locatários
+              </CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Informe até 3 locatários que constarão no contrato de locação.
+              </p>
+            </div>
+            {fields.length < 3 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  append({ name: "", document: "", email: "", phone: "" })
+                }
+                className="gap-1.5 rounded-xl border-dashed self-start sm:self-auto"
+              >
+                <Plus className="size-4" />
+                Adicionar locatário ({fields.length}/3)
+              </Button>
+            )}
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="tenantName">Nome completo</Label>
-              <Input
-                id="tenantName"
-                className="h-11 rounded-2xl"
-                {...form.register("tenantName")}
-              />
-              <FieldError message={form.formState.errors.tenantName?.message} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tenantDocument">CPF ou CNPJ</Label>
-              <Input
-                id="tenantDocument"
-                className="h-11 rounded-2xl"
-                {...form.register("tenantDocument")}
-              />
-              <FieldError
-                message={form.formState.errors.tenantDocument?.message}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tenantPhone">Telefone</Label>
-              <Input
-                id="tenantPhone"
-                className="h-11 rounded-2xl"
-                {...form.register("tenantPhone")}
-              />
-              <FieldError
-                message={form.formState.errors.tenantPhone?.message}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="tenantEmail">E-mail</Label>
-              <Input
-                id="tenantEmail"
-                type="email"
-                className="h-11 rounded-2xl"
-                {...form.register("tenantEmail")}
-              />
-              <FieldError
-                message={form.formState.errors.tenantEmail?.message}
-              />
-            </div>
+          <CardContent className="space-y-5">
+            {fields.map((field, index) => {
+              const isMain = index === 0;
+              return (
+                <div
+                  key={field.id}
+                  className={cn(
+                    "rounded-2xl border p-4 sm:p-5 transition-colors",
+                    isMain
+                      ? "border-primary/20 bg-primary/[0.02]"
+                      : "border-border bg-stone-50/50"
+                  )}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        {index + 1}
+                      </span>
+                      <h4 className="text-sm font-semibold text-foreground">
+                        {isMain
+                          ? "Locatário principal"
+                          : `Locatário adicional ${index + 1}`}
+                      </h4>
+                      {isMain ? (
+                        <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-medium text-stone-600">
+                          Titular da análise
+                        </span>
+                      ) : null}
+                    </div>
+                    {!isMain && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        className="h-8 gap-1 px-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      >
+                        <Trash2 className="size-4" />
+                        <span className="text-xs">Remover</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor={`tenant-${index}-name`}>Nome completo</Label>
+                      <Input
+                        id={`tenant-${index}-name`}
+                        className="h-11 rounded-2xl bg-white"
+                        placeholder="Nome completo do locatário"
+                        {...form.register(`tenants.${index}.name` as const)}
+                      />
+                      <FieldError
+                        message={form.formState.errors.tenants?.[index]?.name?.message}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`tenant-${index}-document`}>CPF ou CNPJ</Label>
+                      <Input
+                        id={`tenant-${index}-document`}
+                        className="h-11 rounded-2xl bg-white"
+                        placeholder="000.000.000-00"
+                        {...form.register(`tenants.${index}.document` as const)}
+                      />
+                      <FieldError
+                        message={
+                          form.formState.errors.tenants?.[index]?.document?.message
+                        }
+                      />
+                      {isMain && (
+                        <p className="text-[0.7rem] text-muted-foreground">
+                          Deve corresponder ao CPF/CNPJ da consulta.
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`tenant-${index}-phone`}>Telefone</Label>
+                      <Input
+                        id={`tenant-${index}-phone`}
+                        className="h-11 rounded-2xl bg-white"
+                        placeholder="(00) 00000-0000"
+                        {...form.register(`tenants.${index}.phone` as const)}
+                      />
+                      <FieldError
+                        message={form.formState.errors.tenants?.[index]?.phone?.message}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor={`tenant-${index}-email`}>E-mail</Label>
+                      <Input
+                        id={`tenant-${index}-email`}
+                        type="email"
+                        className="h-11 rounded-2xl bg-white"
+                        placeholder="locatario@email.com"
+                        {...form.register(`tenants.${index}.email` as const)}
+                      />
+                      <FieldError
+                        message={form.formState.errors.tenants?.[index]?.email?.message}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 

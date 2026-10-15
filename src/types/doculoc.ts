@@ -112,6 +112,7 @@ export type RentalApplication = {
   propertyNeighborhood?: string | null;
   propertyCity?: string | null;
   propertyState?: string | null;
+  tenants?: RentalApplicationTenant[];
   contract?: Contract | null;
   contests?: Contest[];
   createdAt?: string;
@@ -190,11 +191,28 @@ export type CreateApplicationInitialResponse =
   | CreateApplicationResponse
   | PendingConsultResponse;
 
+export type RentalApplicationTenant = {
+  id?: string;
+  order: number;
+  name: string;
+  document: string;
+  email: string;
+  phone: string;
+};
+
+export type ContractTenant = {
+  name: string;
+  document: string;
+  email: string;
+  phone: string;
+};
+
 export type ContractDataBody = {
-  tenantName: string;
-  tenantDocument: string;
-  tenantEmail: string;
-  tenantPhone: string;
+  tenantName?: string;
+  tenantDocument?: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  tenants?: ContractTenant[];
   propertyZipCode: string;
   propertyStreet: string;
   propertyNumber: string;
@@ -202,6 +220,7 @@ export type ContractDataBody = {
   propertyNeighborhood: string;
   propertyCity: string;
   propertyState: string;
+  adhesionFee?: number;
 };
 
 export type Wallet = {

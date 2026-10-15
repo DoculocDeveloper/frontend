@@ -20,7 +20,9 @@ function buildParams(params?: ListApplicationsParams) {
   }
 
   if (params?.document) {
-    cleanParams.set("document", onlyDigits(params.document));
+    const raw = params.document.trim();
+    cleanParams.set("document", onlyDigits(raw));
+    cleanParams.set("search", raw);
   }
 
   if (params?.requesterId) {
@@ -146,21 +148,31 @@ export async function fillContractData(
   applicationId: string,
   body: ContractDataBody,
 ) {
-  const cleanDocument = onlyDigits(body.tenantDocument);
-  const cleanPhone = onlyDigits(body.tenantPhone);
   const cleanZipCode = onlyDigits(body.propertyZipCode);
+
+  const rawTenants =
+    body.tenants && body.tenants.length > 0
+      ? body.tenants
+      : [
+          {
+            name: body.tenantName ?? "",
+            document: body.tenantDocument ?? "",
+            email: body.tenantEmail ?? "",
+            phone: body.tenantPhone ?? "",
+          },
+        ];
+
+  const tenants = rawTenants.map((t) => ({
+    name: t.name.trim(),
+    document: onlyDigits(t.document),
+    email: t.email.trim(),
+    phone: onlyDigits(t.phone),
+  }));
 
   const response = await api.patch<{ application: RentalApplication }>(
     `/rental-applications/${applicationId}/contract-data`,
     {
-      tenants: [
-        {
-          name: body.tenantName.trim(),
-          document: cleanDocument,
-          email: body.tenantEmail.trim(),
-          phone: cleanPhone,
-        },
-      ],
+      tenants,
       propertyZipCode: cleanZipCode,
       propertyStreet: body.propertyStreet.trim(),
       propertyNumber: body.propertyNumber.trim(),
@@ -168,7 +180,7 @@ export async function fillContractData(
       propertyNeighborhood: body.propertyNeighborhood.trim(),
       propertyCity: body.propertyCity.trim(),
       propertyState: body.propertyState.trim().toUpperCase(),
-      adhesionFee: 0,
+      adhesionFee: body.adhesionFee ?? 0,
     },
   );
 

@@ -1,8 +1,10 @@
 // Components
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
 import {
@@ -15,7 +17,7 @@ import {
 
 // Libs
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Mail, SquareAsterisk } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, SquareAsterisk } from "lucide-react";
 import { signIn } from "@/api/sign-in";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -38,6 +40,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [showPassword, setShowPassword] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { save } = useAuth();
@@ -122,11 +125,27 @@ export function LoginForm({
             </InputGroupAddon>
             <InputGroupInput
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Digite sua senha"
               required
               {...register('password')}
             />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Ocultar senha" : "Exibir senha"}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </InputGroupButton>
+            </InputGroupAddon>
           </InputGroup>
         </Field>
         <Field>

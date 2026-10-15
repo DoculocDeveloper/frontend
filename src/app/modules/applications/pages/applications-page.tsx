@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Download, FileSearch, Plus, Search } from "lucide-react";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -35,21 +36,48 @@ export function ApplicationsPage({
   description?: string;
   eyebrow?: string;
 }) {
-  const [document, setDocument] = useState("");
+  const [documentInput, setDocumentInput] = useState("");
+  const [debouncedDocument, setDebouncedDocument] = useState("");
   const [status, setStatus] = useState<RentalApplicationStatus | "ALL">(forcedStatus ?? "ALL");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const basePath = isAdmin ? "/admin" : "/real_estate";
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedDocument(documentInput);
+      setPage(1);
+    }, 350);
+
+    return () => clearTimeout(handler);
+  }, [documentInput]);
 
   const effectiveStatus = forcedStatus ?? status;
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["rental-applications", effectiveStatus, document, isAdmin],
+    queryKey: ["rental-applications", effectiveStatus, debouncedDocument, page, perPage, isAdmin],
     queryFn: () =>
       listRentalApplications({
         status: effectiveStatus,
-        document,
-        page: 1,
-        perPage: 50,
+        document: debouncedDocument,
+        page,
+        perPage,
       }),
   });
+
+  function handleStatusChange(value: RentalApplicationStatus | "ALL") {
+    setStatus(value);
+    setPage(1);
+  }
+
+  function handlePerPageChange(newPerPage: number) {
+    setPerPage(newPerPage);
+    setPage(1);
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function handleDownload(application: RentalApplication) {
     if (!application.contract?.id) return;
@@ -63,6 +91,7 @@ export function ApplicationsPage({
   }
 
   const applications = data?.applications ?? [];
+  const meta = data?.meta;
 
   return (
     <PageShell>
@@ -94,13 +123,13 @@ export function ApplicationsPage({
             <Input
               className="h-11 rounded-2xl bg-white pl-10"
               placeholder="Buscar por CPF ou CNPJ"
-              value={document}
-              onChange={(event) => setDocument(event.target.value)}
+              value={documentInput}
+              onChange={(event) => setDocumentInput(event.target.value)}
             />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             {!forcedStatus ? (
-              <Select value={status} onValueChange={(value) => setStatus(value as RentalApplicationStatus | "ALL")}>
+              <Select value={status} onValueChange={(value) => handleStatusChange(value as RentalApplicationStatus | "ALL")}>
                 <SelectTrigger className="h-11 w-full rounded-2xl bg-white sm:w-64">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -115,7 +144,7 @@ export function ApplicationsPage({
             ) : null}
             <div className="flex w-full items-center justify-center gap-2 rounded-full border bg-stone-50 px-3 py-2 text-sm text-muted-foreground sm:w-auto">
               <Download className="size-4" />
-              {data?.meta.total ?? 0} registros
+              {meta?.total ?? 0} registros
             </div>
           </div>
         </div>
@@ -128,12 +157,27 @@ export function ApplicationsPage({
           ))}
         </div>
       ) : applications.length > 0 ? (
-        <ApplicationsTable
-          applications={applications}
-          basePath={basePath}
-          isAdmin={isAdmin}
-          onDownloadContract={handleDownload}
-        />
+        <>
+          <ApplicationsTable
+            applications={applications}
+            basePath={basePath}
+            isAdmin={isAdmin}
+            onDownloadContract={handleDownload}
+          />
+
+          {meta && (
+            <Pagination
+              page={page}
+              perPage={perPage}
+              total={meta.total}
+              lastPage={meta.lastPage}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+              isLoading={isFetching}
+              perPageOptions={[10, 20, 50]}
+            />
+          )}
+        </>
       ) : (
         <EmptyState
           icon={<FileSearch className="size-7" />}
