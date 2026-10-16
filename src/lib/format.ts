@@ -37,6 +37,30 @@ export function formatDocument(value?: string | null, type?: "CPF" | "CNPJ" | st
   return value || "-";
 }
 
+export function formatPhone(value?: string | null) {
+  const digits = onlyDigits(value);
+
+  if (digits.length === 11) {
+    return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  }
+
+  if (digits.length === 10) {
+    return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
+
+  return value || "-";
+}
+
+export function formatZipCode(value?: string | null) {
+  const digits = onlyDigits(value);
+
+  if (digits.length === 8) {
+    return digits.replace(/(\d{5})(\d{3})/, "$1-$2");
+  }
+
+  return value || "-";
+}
+
 export function initials(name?: string | null) {
   const parts = String(name ?? "Doculoc")
     .trim()

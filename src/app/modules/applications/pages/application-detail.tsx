@@ -11,12 +11,13 @@ import {
   Home,
   Loader2,
   Mail,
+  MapPin,
   MessageSquareWarning,
   RefreshCw,
   Send,
   ShieldCheck,
   Sparkles,
-  UserRound,
+  Users,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,7 +28,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState, PageHeader, PageShell } from "@/app/modules/_components/page-shell";
-import { formatCurrency, formatDate, formatDocument, normalizeReasons } from "@/lib/format";
+import {
+  formatCurrency,
+  formatDate,
+  formatDocument,
+  formatPhone,
+  formatZipCode,
+  normalizeReasons,
+} from "@/lib/format";
 import { applicationStatusDescriptions, applicationStatusLabels } from "@/lib/status";
 import { getApiErrorMessage, getApiErrorStatus } from "@/services/api";
 import {
@@ -188,6 +196,20 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     isContractGenerated && isAdmin && contract?.signatureStatus !== "SIGNED";
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
+  const tenantsList =
+    application.tenants && application.tenants.length > 0
+      ? application.tenants
+      : application.tenantName
+        ? [
+            {
+              order: 1,
+              name: application.tenantName,
+              document: application.tenantDocument || application.document,
+              email: application.tenantEmail || "",
+              phone: application.tenantPhone || "",
+            },
+          ]
+        : [];
 
   return (
     <PageShell>
@@ -431,32 +453,85 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
       <div className="grid gap-5 lg:grid-cols-2">
         <Card className="bg-white/85 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserRound className="size-5 text-primary" />
-              Dados para contrato
-            </CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="size-5 text-primary" />
+                Dados para contrato
+              </CardTitle>
+              {tenantsList.length > 0 ? (
+                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary font-medium">
+                  {tenantsList.length === 1 ? "1 locatário" : `${tenantsList.length} locatários`}
+                </Badge>
+              ) : null}
+            </div>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <DetailItem label="Locatário" value={application.tenantName} />
-            <DetailItem label="Documento" value={formatDocument(application.tenantDocument)} />
-            <DetailItem label="E-mail" value={application.tenantEmail} />
-            <DetailItem label="Telefone" value={application.tenantPhone} />
-            <DetailItem
-              label="Endereço"
-              value={
-                application.propertyStreet
-                  ? `${application.propertyStreet}, ${application.propertyNumber ?? "s/n"}`
-                  : null
-              }
-            />
-            <DetailItem
-              label="Cidade/UF"
-              value={
-                application.propertyCity
-                  ? `${application.propertyCity}/${application.propertyState ?? ""}`
-                  : null
-              }
-            />
+          <CardContent className="space-y-5">
+            {tenantsList.length > 0 ? (
+              <div className="space-y-4">
+                {tenantsList.map((tenant, index) => (
+                  <div
+                    key={tenant.id ?? index}
+                    className="rounded-2xl border bg-stone-50/70 p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                        {index === 0 ? "Locatário 1 (Principal)" : `Locatário ${tenant.order || index + 1}`}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <DetailItem label="Nome" value={tenant.name} />
+                      <DetailItem label="CPF/CNPJ" value={formatDocument(tenant.document)} />
+                      <DetailItem label="E-mail" value={tenant.email} />
+                      <DetailItem label="Telefone" value={formatPhone(tenant.phone)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhum locatário preenchido ainda.
+              </p>
+            )}
+
+            {(application.propertyStreet || application.propertyZipCode) && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <MapPin className="size-4 text-primary" />
+                    Dados do imóvel da locação
+                  </h4>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <DetailItem
+                      label="Endereço"
+                      value={
+                        application.propertyStreet
+                          ? `${application.propertyStreet}, ${application.propertyNumber ?? "s/n"}${
+                              application.propertyComplement ? ` - ${application.propertyComplement}` : ""
+                            }`
+                          : null
+                      }
+                    />
+                    <DetailItem label="Bairro" value={application.propertyNeighborhood} />
+                    <DetailItem
+                      label="Cidade/UF"
+                      value={
+                        application.propertyCity
+                          ? `${application.propertyCity}/${application.propertyState ?? ""}`
+                          : null
+                      }
+                    />
+                    <DetailItem label="CEP" value={formatZipCode(application.propertyZipCode)} />
+                    {application.adhesionFee ? (
+                      <DetailItem
+                        label="Taxa de Adesão"
+                        value={formatCurrency(application.adhesionFee)}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
