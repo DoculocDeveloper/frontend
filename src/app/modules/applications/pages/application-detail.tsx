@@ -10,7 +10,9 @@ import {
   FileCheck2,
   Home,
   Loader2,
+  Mail,
   MessageSquareWarning,
+  RefreshCw,
   Send,
   ShieldCheck,
   Sparkles,
@@ -27,11 +29,21 @@ import { Separator } from "@/components/ui/separator";
 import { EmptyState, PageHeader, PageShell } from "@/app/modules/_components/page-shell";
 import { formatCurrency, formatDate, formatDocument, normalizeReasons } from "@/lib/format";
 import { applicationStatusDescriptions, applicationStatusLabels } from "@/lib/status";
-import { getApiErrorMessage } from "@/services/api";
-import { downloadContract, generateContract, sendContractToSignature } from "@/services/contracts";
+import { getApiErrorMessage, getApiErrorStatus } from "@/services/api";
+import {
+  downloadContract,
+  generateContract,
+  resendContractSignatureNotification,
+  restartContractSignature,
+  sendContractToSignature,
+} from "@/services/contracts";
 import { getRentalApplication } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
+import {
+  CancelSignatureDialog,
+  ReopenContractDataDialog,
+} from "../components/contract-action-dialogs";
 
 function DetailItem({ label, value }: { label: string; value?: string | number | null }) {
   return (
@@ -70,6 +82,39 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
       await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
       await queryClient.invalidateQueries({ queryKey: ["rental-applications"] });
       toast.success("Contrato enviado para assinatura via Clicksign!");
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  });
+
+  const resendSignatureMutation = useMutation({
+    mutationFn: () => resendContractSignatureNotification(application?.contract?.id ?? ""),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
+      toast.success("Notificação de assinatura reenviada com sucesso!");
+    },
+    onError: (error) => {
+      const status = getApiErrorStatus(error);
+      const message = getApiErrorMessage(error);
+      if (
+        status === 500 ||
+        status === 429 ||
+        message.toLowerCase().includes("internal server error")
+      ) {
+        toast.error(
+          "A Clicksign limita o envio de notificações. Por favor, aguarde 1 minuto para tentar reenviar.",
+        );
+        return;
+      }
+      toast.error(message);
+    },
+  });
+
+  const restartSignatureMutation = useMutation({
+    mutationFn: () => restartContractSignature(application?.contract?.id ?? ""),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
+      await queryClient.invalidateQueries({ queryKey: ["rental-applications"] });
+      toast.success("Envio para assinatura reiniciado com sucesso!");
     },
     onError: (error) => toast.error(getApiErrorMessage(error)),
   });
@@ -121,9 +166,26 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const canSendSignature =
     isContractGenerated &&
     isAdmin &&
-    (!contract?.signatureStatus ||
-      contract.signatureStatus === "NOT_SENT" ||
-      contract.signatureStatus === "ERROR");
+    (!contract?.signatureStatus || contract.signatureStatus === "NOT_SENT");
+  const canRestartSignature =
+    isContractGenerated &&
+    isAdmin &&
+    (contract?.signatureStatus === "CANCELLED" || contract?.signatureStatus === "ERROR");
+  const canResendNotification =
+    isContractGenerated &&
+    isAdmin &&
+    Boolean(contract?.clicksignEnvelopeId) &&
+    ["SENT", "PARTIALLY_SIGNED", "ENVELOPE_CREATED", "ACTION_REQUIRED"].includes(
+      contract?.signatureStatus ?? "",
+    );
+  const canCancelSignature =
+    isContractGenerated &&
+    isAdmin &&
+    ["SENT", "PARTIALLY_SIGNED", "ENVELOPE_CREATED", "ACTION_REQUIRED"].includes(
+      contract?.signatureStatus ?? "",
+    );
+  const canReopenContract =
+    isContractGenerated && isAdmin && contract?.signatureStatus !== "SIGNED";
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
 
@@ -192,11 +254,61 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   Enviar para assinatura
                 </Button>
               ) : null}
+              {canRestartSignature ? (
+                <Button
+                  onClick={() => restartSignatureMutation.mutate()}
+                  disabled={restartSignatureMutation.isPending}
+                  className="beam-button shadow-lg shadow-primary/15"
+                >
+                  {restartSignatureMutation.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-4" />
+                  )}
+                  Reiniciar assinatura
+                </Button>
+              ) : null}
+              {canResendNotification ? (
+                <Button
+                  variant="outline"
+                  onClick={() => resendSignatureMutation.mutate()}
+                  disabled={resendSignatureMutation.isPending}
+                >
+                  {resendSignatureMutation.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Mail className="size-4" />
+                  )}
+                  Reenviar e-mail
+                </Button>
+              ) : null}
+              {canCancelSignature && contract?.id ? (
+                <CancelSignatureDialog
+                  contractId={contract.id}
+                  applicationId={application.id}
+                />
+              ) : null}
+              {canReopenContract && contract?.id ? (
+                <ReopenContractDataDialog
+                  contractId={contract.id}
+                  applicationId={application.id}
+                />
+              ) : null}
               {isContractGenerated &&
               contract?.signatureStatus &&
               ["SENT", "PARTIALLY_SIGNED", "ENVELOPE_CREATED"].includes(contract.signatureStatus) ? (
                 <Badge variant="outline" className="h-10 px-4 border-indigo-200 bg-indigo-50 text-indigo-700 font-medium">
                   Aguardando assinaturas
+                </Badge>
+              ) : null}
+              {isContractGenerated && contract?.signatureStatus === "CANCELLED" ? (
+                <Badge variant="outline" className="h-10 px-4 border-rose-200 bg-rose-50 text-rose-700 font-medium">
+                  Assinatura cancelada
+                </Badge>
+              ) : null}
+              {isContractGenerated && contract?.signatureStatus === "ERROR" ? (
+                <Badge variant="outline" className="h-10 px-4 border-rose-200 bg-rose-50 text-rose-700 font-medium">
+                  Erro no envio
                 </Badge>
               ) : null}
               {isContractGenerated && contract?.signatureStatus === "SIGNED" ? (
@@ -379,11 +491,27 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
 
         {contract?.signers && contract.signers.length > 0 ? (
           <Card className="bg-white/85 shadow-sm lg:col-span-2">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-2">
                 <FileCheck2 className="size-5 text-primary" />
                 Signatários do contrato (Clicksign)
               </CardTitle>
+              {canResendNotification ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => resendSignatureMutation.mutate()}
+                  disabled={resendSignatureMutation.isPending}
+                  className="h-8 gap-1.5 text-xs"
+                >
+                  {resendSignatureMutation.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Mail className="size-3.5" />
+                  )}
+                  Reenviar e-mail
+                </Button>
+              ) : null}
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-3">
