@@ -13,6 +13,7 @@ import {
   Mail,
   MapPin,
   MessageSquareWarning,
+  Pencil,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -51,6 +52,7 @@ import { AdminDecisionDialog } from "../components/admin-decision-dialog";
 import {
   CancelSignatureDialog,
   ReopenContractDataDialog,
+  ReopenForEditDialog,
 } from "../components/contract-action-dialogs";
 
 function DetailItem({ label, value }: { label: string; value?: string | number | null }) {
@@ -165,7 +167,10 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
 
   const reasons = normalizeReasons(application.decisionReasons);
   const canContest = !isAdmin && application.status === "REJECTED";
-  const canFillContract = !isAdmin && application.status === "WAITING_CONTRACT_DATA";
+  const isEditingContract = application.status === "WAITING_ADMIN_CONTRACT";
+  const canFillContract =
+    !isAdmin &&
+    (application.status === "WAITING_CONTRACT_DATA" || isEditingContract);
   const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
   const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
   const contract = application.contract;
@@ -229,10 +234,23 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
           action={
             <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
               {canFillContract ? (
-                <Button asChild className="beam-button shadow-lg shadow-primary/15">
+                <Button
+                  asChild
+                  variant={isEditingContract ? "outline" : "default"}
+                  className={!isEditingContract ? "beam-button shadow-lg shadow-primary/15" : ""}
+                >
                   <Link to={`${basePath}/consultas/${application.id}/contrato`}>
-                    <Home className="size-4" />
-                    Preencher contrato
+                    {isEditingContract ? (
+                      <>
+                        <Pencil className="size-4" />
+                        Editar dados do contrato
+                      </>
+                    ) : (
+                      <>
+                        <Home className="size-4" />
+                        Preencher contrato
+                      </>
+                    )}
                   </Link>
                 </Button>
               ) : null}
@@ -251,10 +269,13 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                 </>
               ) : null}
               {canGenerateContract ? (
-                <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-                  {generateMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                  Gerar contrato
-                </Button>
+                <>
+                  <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
+                    {generateMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                    Gerar contrato
+                  </Button>
+                  <ReopenForEditDialog applicationId={application.id} />
+                </>
               ) : null}
               {canDownload ? (
                 <Button variant="outline" onClick={handleDownload}>

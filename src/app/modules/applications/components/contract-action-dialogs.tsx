@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Ban, FileX, Loader2 } from "lucide-react";
+import { Ban, FileX, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { getApiErrorMessage } from "@/services/api";
 import { cancelContractSignature, reopenContractData } from "@/services/contracts";
+import { reopenRentalApplication } from "@/services/rental-applications";
 
 export function CancelSignatureDialog({
   contractId,
@@ -124,6 +125,63 @@ export function ReopenContractDataDialog({
           >
             {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             Cancelar e reabrir dados
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ReopenForEditDialog({
+  applicationId,
+}: {
+  applicationId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: () => reopenRentalApplication(applicationId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rental-application", applicationId] });
+      await queryClient.invalidateQueries({ queryKey: ["rental-applications"] });
+      toast.success("Consulta reaberta para edição da imobiliária.");
+      setOpen(false);
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="text-amber-700 hover:text-amber-800 hover:bg-amber-50 border-amber-200"
+        >
+          <RotateCcw className="size-4" />
+          Reabrir para edição
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reabrir consulta para edição?</DialogTitle>
+          <DialogDescription>
+            A consulta retornará para o status anterior (<strong>Aguardando dados do contrato</strong>).
+            A imobiliária poderá acessar o formulário para editar ou corrigir os dados do locatário e do imóvel antes de o contrato ser gerado.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4 gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>
+            Voltar
+          </Button>
+          <Button
+            variant="default"
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Reabrir para edição
           </Button>
         </DialogFooter>
       </DialogContent>

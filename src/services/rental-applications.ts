@@ -213,3 +213,11 @@ export async function decideRentalApplication(
 
   return response.data.application;
 }
+
+export async function reopenRentalApplication(applicationId: string) {
+  const response = await api.post<{ application: RentalApplication }>(
+    `/rental-applications/${applicationId}/reopen`,
+  );
+
+  return response.data.application;
+}

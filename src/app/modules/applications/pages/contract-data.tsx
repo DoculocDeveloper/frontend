@@ -179,6 +179,10 @@ export function ContractDataPage() {
     return () => window.clearTimeout(timeout);
   }, [propertyZipCode, form]);
 
+  const isEditing = application?.status === "WAITING_ADMIN_CONTRACT";
+  const isAllowed =
+    application?.status === "WAITING_CONTRACT_DATA" || isEditing;
+
   const mutation = useMutation({
     mutationFn: (values: ContractDataBody) =>
       fillContractData(applicationId ?? "", values),
@@ -190,7 +194,9 @@ export function ContractDataPage() {
         queryKey: ["rental-applications"],
       });
       toast.success(
-        "Dados enviados. Aguardando geração do contrato pelo admin.",
+        isEditing
+          ? "Dados do contrato atualizados com sucesso."
+          : "Dados enviados. Aguardando geração do contrato pelo admin.",
       );
       navigate(`/real_estate/consultas/${applicationId}`);
     },
@@ -210,11 +216,9 @@ export function ContractDataPage() {
     });
   }
 
-  const isAllowed = application?.status === "WAITING_CONTRACT_DATA";
-
   return (
     <PageShell>
-      <Helmet title="Dados para contrato" />
+      <Helmet title={isEditing ? "Editar dados para contrato" : "Dados para contrato"} />
 
       <div>
         <Button asChild variant="ghost" className="mb-4">
@@ -225,8 +229,12 @@ export function ContractDataPage() {
         </Button>
         <PageHeader
           eyebrow="Contrato"
-          title="Aprovado para contrato"
-          description="Cadastro aprovado. Complete os dados do locatário e do imóvel para que o admin possa gerar o contrato."
+          title={isEditing ? "Editar dados para contrato" : "Aprovado para contrato"}
+          description={
+            isEditing
+              ? "Atualize os dados do locatário ou do imóvel antes da geração do contrato pelo admin."
+              : "Cadastro aprovado. Complete os dados do locatário e do imóvel para que o admin possa gerar o contrato."
+          }
         />
       </div>
 
@@ -239,7 +247,9 @@ export function ContractDataPage() {
           </AlertTitle>
           <AlertDescription>
             {isAllowed
-              ? "Os dados serão vinculados a essa análise recomendada."
+              ? isEditing
+                ? "Edição liberada: o contrato ainda não foi gerado pelo admin."
+                : "Os dados serão vinculados a essa análise recomendada."
               : "Esta consulta não está no status liberado para preenchimento de contrato."}
           </AlertDescription>
         </Alert>
@@ -481,7 +491,7 @@ export function ContractDataPage() {
             ) : (
               <Save className="size-4" />
             )}
-            Enviar dados
+            {isEditing ? "Salvar alterações" : "Enviar dados"}
           </Button>
         </div>
       </form>
