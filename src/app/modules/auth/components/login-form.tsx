@@ -29,12 +29,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 
 
-const signInForm = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-})
+import { getRoleBasePath } from "@/types/auth";
 
-type SignInForm = z.infer<typeof signInForm>
+const signInForm = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Informe a senha."),
+});
+
+type SignInForm = z.infer<typeof signInForm>;
 
 export function LoginForm({
   className,
@@ -76,9 +78,9 @@ export function LoginForm({
 
       save(response.data);
 
-      const role = response.data.user.role.toLowerCase();
+      const basePath = getRoleBasePath(response.data.user.role);
 
-      navigate(`/${role}/dashboard`);
+      navigate(`${basePath}/dashboard`);
     } catch (error) {
       toast.error("Email ou senha incorretos.")
     }
