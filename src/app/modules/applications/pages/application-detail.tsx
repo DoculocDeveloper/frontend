@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState, PageHeader, PageShell } from "@/app/modules/_components/page-shell";
+import { useAuth } from "@/hooks/use-auth";
+import { normalizeRole } from "@/types/auth";
 import {
   formatCurrency,
   formatDate,
@@ -165,17 +167,20 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     );
   }
 
+  const { session } = useAuth();
+  const isSeller = normalizeRole(session?.user.role) === "SELLER";
   const reasons = normalizeReasons(application.decisionReasons);
-  const canContest = !isAdmin && application.status === "REJECTED";
+  const canContest = !isAdmin && !isSeller && application.status === "REJECTED";
   const isEditingContract = application.status === "WAITING_ADMIN_CONTRACT";
   const canFillContract =
     !isAdmin &&
+    !isSeller &&
     (application.status === "WAITING_CONTRACT_DATA" || isEditingContract);
   const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
   const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
   const contract = application.contract;
   const isContractGenerated = application.status === "CONTRACT_GENERATED" && Boolean(contract?.id);
-  const canDownload = isContractGenerated && isAdmin;
+  const canDownload = isContractGenerated;
   const canSendSignature =
     isContractGenerated &&
     isAdmin &&

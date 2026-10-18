@@ -14,8 +14,22 @@ import { ApplicationDetailPage } from "./app/modules/applications/pages/applicat
 import { ContractDataPage } from "./app/modules/applications/pages/contract-data";
 import { ContestApplicationPage } from "./app/modules/applications/pages/contest-application";
 import { RealEstatesPage } from "./app/modules/admin/pages/real-estates";
+import { RealEstateDetailPage } from "./app/modules/admin/pages/real-estate-detail";
 import ForgotPasswordPage from "./app/modules/auth/pages/forgot-password";
 import ResetPasswordPage from "./app/modules/auth/pages/reset-password";
+import { useAuth } from "@/hooks/use-auth";
+import { normalizeRole } from "@/types/auth";
+
+function SellerRestrictedRoute({ children }: { children: React.ReactNode }) {
+  const { session } = useAuth();
+  const role = normalizeRole(session?.user.role);
+
+  if (role === "SELLER") {
+    return <Navigate to="/real_estate/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 export const router = createBrowserRouter([
   {
@@ -60,7 +74,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "nova-consulta",
-        element: <NewApplicationPage />,
+        element: (
+          <SellerRestrictedRoute>
+            <NewApplicationPage />
+          </SellerRestrictedRoute>
+        ),
       },
       {
         path: "consultas",
@@ -72,15 +90,27 @@ export const router = createBrowserRouter([
       },
       {
         path: "consultas/:applicationId/contrato",
-        element: <ContractDataPage />,
+        element: (
+          <SellerRestrictedRoute>
+            <ContractDataPage />
+          </SellerRestrictedRoute>
+        ),
       },
       {
         path: "consultas/:applicationId/contestar",
-        element: <ContestApplicationPage />,
+        element: (
+          <SellerRestrictedRoute>
+            <ContestApplicationPage />
+          </SellerRestrictedRoute>
+        ),
       },
       {
         path: "configuracoes",
-        element: <RealEstateSettingsPage />,
+        element: (
+          <SellerRestrictedRoute>
+            <RealEstateSettingsPage />
+          </SellerRestrictedRoute>
+        ),
       },
     ],
   },
@@ -132,6 +162,10 @@ export const router = createBrowserRouter([
       {
         path: "imobiliarias",
         element: <RealEstatesPage />,
+      },
+      {
+        path: "imobiliarias/:id",
+        element: <RealEstateDetailPage />,
       },
     ],
   },

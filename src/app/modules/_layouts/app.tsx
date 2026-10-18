@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export function AppLayout({
   expectedRole,
 }: {
-  expectedRole?: "ADMIN" | "REAL_ESTATE";
+  expectedRole?: "ADMIN" | "REAL_ESTATE" | "SELLER";
 }) {
   const { session, isLoading, remove } = useAuth();
   const navigate = useNavigate();
@@ -40,7 +40,13 @@ export function AppLayout({
 
   const currentRole = normalizeRole(session.user.role);
 
-  if (expectedRole && currentRole !== expectedRole) {
+  const isRoleAllowed =
+    !expectedRole ||
+    currentRole === expectedRole ||
+    (expectedRole === "REAL_ESTATE" &&
+      (currentRole === "REAL_ESTATE" || currentRole === "SELLER"));
+
+  if (!isRoleAllowed) {
     return (
       <Navigate to={`${getRoleBasePath(currentRole)}/dashboard`} replace />
     );
@@ -50,6 +56,13 @@ export function AppLayout({
     remove();
     navigate("/sign-in");
   }
+
+  const portalTitle =
+    currentRole === "ADMIN"
+      ? "Administração"
+      : currentRole === "SELLER"
+        ? "Portal imobiliária (Vendedor)"
+        : "Portal imobiliária";
 
   return (
     <SidebarProvider>
@@ -66,9 +79,7 @@ export function AppLayout({
                   alt="Doculoc"
                 />
                 <p className="truncate text-sm font-medium">
-                  {currentRole === "ADMIN"
-                    ? "Administração"
-                    : "Portal imobiliária"}
+                  {portalTitle}
                 </p>
               </div>
             </div>

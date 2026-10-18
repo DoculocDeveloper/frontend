@@ -20,6 +20,8 @@ import { listRentalApplications } from "@/services/rental-applications";
 import { downloadContract } from "@/services/contracts";
 import { getApiErrorMessage } from "@/services/api";
 import type { RentalApplication, RentalApplicationStatus } from "@/types/doculoc";
+import { useAuth } from "@/hooks/use-auth";
+import { normalizeRole } from "@/types/auth";
 import { statusOptions } from "@/lib/status";
 import { ApplicationsTable } from "../components/applications-table";
 
@@ -36,6 +38,8 @@ export function ApplicationsPage({
   description?: string;
   eyebrow?: string;
 }) {
+  const { session } = useAuth();
+  const isSeller = normalizeRole(session?.user.role) === "SELLER";
   const [documentInput, setDocumentInput] = useState("");
   const [debouncedDocument, setDebouncedDocument] = useState("");
   const [status, setStatus] = useState<RentalApplicationStatus | "ALL">(forcedStatus ?? "ALL");
@@ -95,17 +99,19 @@ export function ApplicationsPage({
 
   return (
     <PageShell className="max-w-full">
-      <Helmet title={title ?? (isAdmin ? "Consultas" : "Minhas consultas")} />
+      <Helmet title={title ?? (isAdmin ? "Consultas" : isSeller ? "Consultas e Contratos" : "Minhas consultas")} />
 
       <PageHeader
-        eyebrow={eyebrow ?? (isAdmin ? "Operação Admin" : "Carteira de consultas")}
-        title={title ?? (isAdmin ? "Consultas" : "Minhas consultas")}
+        eyebrow={eyebrow ?? (isAdmin ? "Operação Admin" : isSeller ? "Acompanhamento" : "Carteira de consultas")}
+        title={title ?? (isAdmin ? "Consultas" : isSeller ? "Consultas e Contratos" : "Minhas consultas")}
         description={
           description ??
-          "Acompanhe o ciclo completo de análise, contestação, preenchimento de dados e geração do contrato."
+          (isSeller
+            ? "Visualização dos contratos gerados e consultas da imobiliária vinculada."
+            : "Acompanhe o ciclo completo de análise, contestação, preenchimento de dados e geração do contrato.")
         }
         action={
-          !isAdmin ? (
+          !isAdmin && !isSeller ? (
             <Button asChild size="lg" className="beam-button shadow-lg shadow-primary/15">
               <Link to="/real_estate/nova-consulta">
                 <Plus className="size-4" />

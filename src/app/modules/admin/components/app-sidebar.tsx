@@ -72,6 +72,15 @@ const realEstateItems: NavItem[] = [
   },
 ];
 
+const sellerItems: NavItem[] = [
+  { title: "Dashboard", href: "/real_estate/dashboard", icon: LayoutDashboard },
+  {
+    title: "Consultas e Contratos",
+    href: "/real_estate/consultas",
+    icon: ClipboardList,
+  },
+];
+
 function isActivePath(pathname: string, href: string) {
   if (href.endsWith("dashboard")) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -83,9 +92,23 @@ export function AppSidebar() {
   const location = useLocation();
   const role = normalizeRole(session?.user.role);
   const basePath = getRoleBasePath(role);
-  const items = role === "ADMIN" ? adminItems : realEstateItems;
+  const items =
+    role === "ADMIN"
+      ? adminItems
+      : role === "SELLER"
+        ? sellerItems
+        : realEstateItems;
+
+  const companyName =
+    session?.user.realEstateProfile?.name ?? session?.user.realEstate?.name;
   const displayName =
-    session?.user.realEstateProfile?.name ?? session?.user.name ?? "Doculoc";
+    role === "SELLER"
+      ? session?.user.name ?? "Vendedor"
+      : companyName ?? session?.user.name ?? "Doculoc";
+  const subName =
+    role === "SELLER" && companyName
+      ? companyName
+      : session?.user.email;
 
   function closeMobileNav() {
     if (isMobile) setOpenMobile(false);
@@ -148,7 +171,7 @@ export function AppSidebar() {
               <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
                 <p className="truncate text-sm font-medium">{displayName}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {session?.user.email}
+                  {subName}
                 </p>
               </div>
             </div>
