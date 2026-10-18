@@ -307,7 +307,7 @@ export function RealEstateDetailPage() {
 
         {/* Conteúdo Aba 2: Vendedores */}
         <TabsContent value="sellers" className="mt-4 space-y-4">
-          <div className="flex flex-col gap-3 rounded-3xl border bg-white/85 p-6 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-3xl border bg-white/85 p-6 shadow-sm backdrop-blur">
             <div>
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Users className="size-5 text-primary" />
@@ -317,7 +317,6 @@ export function RealEstateDetailPage() {
                 Os vendedores têm acesso ao portal da imobiliária exclusivamente para visualização de contratos e consultas.
               </p>
             </div>
-            <CreateSellerDialog realEstateId={realEstate.id} realEstateName={displayName} />
           </div>
 
           {sellers.length > 0 ? (
@@ -432,9 +431,6 @@ export function RealEstateDetailPage() {
               icon={<Users className="size-8" />}
               title="Nenhum vendedor cadastrado"
               description="Cadastre vendedores para que possam acompanhar os contratos gerados desta imobiliária com visualização segura."
-              action={
-                <CreateSellerDialog realEstateId={realEstate.id} realEstateName={displayName} />
-              }
             />
           )}
         </TabsContent>
