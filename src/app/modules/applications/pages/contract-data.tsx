@@ -46,10 +46,9 @@ const contractDataSchema = z.object({
     .string()
     .min(2, "UF obrigatória.")
     .max(2, "Use a UF com 2 letras."),
-  adhesionFee: z.coerce
-    .number({ invalid_type_error: "Informe um valor válido para a taxa de adesão." })
-    .min(0, "A taxa de adesão não pode ser negativa.")
-    .default(0),
+  adhesionFee: z
+    .number()
+    .min(0, "A taxa de adesão não pode ser negativa."),
 });
 
 type ContractDataForm = z.infer<typeof contractDataSchema>;

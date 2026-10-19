@@ -1,15 +1,32 @@
-# React + TypeScript + Vite
+# Frontend - Doculoc
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação web da plataforma Doculoc (React + Vite + TypeScript).
 
-Currently, two official plugins are available:
+## Configuração de Ambiente
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Crie ou edite o arquivo `.env` na raiz do diretório `frontend`:
 
-## React Compiler
+```env
+# URL da API do backend em produção
+VITE_API_URL=https://api.doculoc.com.br
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Caso queira rodar localmente com backend local:
+# VITE_API_URL=http://localhost:3333
+```
+
+## Como gerar o build para produção
+
+1. Instalar as dependências:
+   ```bash
+   npm install
+   ```
+
+2. Compilar para produção:
+   ```bash
+   npm run build
+   ```
+   Os arquivos finais serão gerados na pasta `dist/` prontos para upload na HostGator (incluindo o arquivo `.htaccess` para roteamento SPA).
+
 
 ## Expanding the ESLint configuration
 

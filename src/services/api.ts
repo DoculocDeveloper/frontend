@@ -1,7 +1,9 @@
 import axios, { AxiosError } from "axios";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? "http://localhost:3333" : "https://doculoc-api-prod.onrender.com"),
 });
 
 type ApiErrorResponse = {

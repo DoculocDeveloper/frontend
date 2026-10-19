@@ -55,15 +55,21 @@ async function runDeploy() {
     const currentDir = await client.pwd();
     console.log(`📁 Diretório FTP conectado: ${currentDir}`);
 
-    // Se já estiver na pasta alvo (conta FTP restrita), não cria subpasta
-    if (currentDir.endsWith(remoteDir) || currentDir.includes(remoteDir)) {
-      console.log(`✅ Já está posicionado na pasta do subdomínio: ${remoteDir}`);
+    // Se a pasta for a raiz '/' ou vazia, ou já estiver posicionado nela
+    if (remoteDir === "/" || remoteDir === "" || currentDir.endsWith(remoteDir) || currentDir.includes(remoteDir)) {
+      console.log(`✅ Já posicionado no diretório raiz do site.`);
+      try {
+        await client.removeDir("app.doculoc.com.br");
+        console.log(`🧹 Subpasta duplicada 'app.doculoc.com.br' removida com sucesso.`);
+      } catch {
+        // Ignora se não existir ou se não conseguir remover
+      }
     } else {
       console.log(`📁 Entrando na pasta: ${remoteDir}`);
       await client.ensureDir(remoteDir);
     }
 
-    console.log(`📤 Enviando arquivos do build para '${remoteDir}'...`);
+    console.log(`📤 Enviando arquivos do build para a raiz do site...`);
     const startTime = Date.now();
 
     await client.uploadFromDir(distPath);
