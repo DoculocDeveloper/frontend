@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Home, Loader2, Plus, Save, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Home, Loader2, Plus, Receipt, Save, Trash2, Users } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -46,6 +46,10 @@ const contractDataSchema = z.object({
     .string()
     .min(2, "UF obrigatória.")
     .max(2, "Use a UF com 2 letras."),
+  adhesionFee: z.coerce
+    .number({ invalid_type_error: "Informe um valor válido para a taxa de adesão." })
+    .min(0, "A taxa de adesão não pode ser negativa.")
+    .default(0),
 });
 
 type ContractDataForm = z.infer<typeof contractDataSchema>;
@@ -77,6 +81,7 @@ export function ContractDataPage() {
       propertyNeighborhood: "",
       propertyCity: "",
       propertyState: "",
+      adhesionFee: 0,
     },
   });
 
@@ -125,6 +130,10 @@ export function ContractDataPage() {
       propertyNeighborhood: application.propertyNeighborhood ?? "",
       propertyCity: application.propertyCity ?? "",
       propertyState: application.propertyState ?? "",
+      adhesionFee:
+        application.adhesionFee !== undefined && application.adhesionFee !== null
+          ? Number(application.adhesionFee)
+          : 0,
     });
   }, [application, form]);
 
@@ -213,6 +222,7 @@ export function ContractDataPage() {
       propertyNeighborhood: values.propertyNeighborhood,
       propertyCity: values.propertyCity,
       propertyState: values.propertyState,
+      adhesionFee: Number(values.adhesionFee) || 0,
     });
   }
 
@@ -473,6 +483,40 @@ export function ContractDataPage() {
               <FieldError
                 message={form.formState.errors.propertyState?.message}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/85 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="size-5 text-primary" />
+              Taxa de adesão
+            </CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Defina a taxa de adesão que constará no contrato de locação.
+            </p>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="adhesionFee">Taxa de adesão (R$)</Label>
+              <Input
+                id="adhesionFee"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                className="h-11 rounded-2xl bg-white"
+                {...form.register("adhesionFee", {
+                  valueAsNumber: true,
+                })}
+              />
+              <FieldError
+                message={form.formState.errors.adhesionFee?.message}
+              />
+              <p className="text-xs text-muted-foreground">
+                Informe o valor acordado com o locatário (deixe 0 se não houver taxa de adesão).
+              </p>
             </div>
           </CardContent>
         </Card>

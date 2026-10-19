@@ -548,7 +548,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                       }
                     />
                     <DetailItem label="CEP" value={formatZipCode(application.propertyZipCode)} />
-                    {application.adhesionFee ? (
+                    {application.adhesionFee !== undefined && application.adhesionFee !== null ? (
                       <DetailItem
                         label="Taxa de Adesão"
                         value={formatCurrency(application.adhesionFee)}
