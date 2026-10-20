@@ -70,6 +70,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const { applicationId } = useParams<{ applicationId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { session } = useAuth();
   const basePath = isAdmin ? "/admin" : "/real_estate";
 
   const { data: application, isLoading } = useQuery({
@@ -167,7 +168,6 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     );
   }
 
-  const { session } = useAuth();
   const isSeller = normalizeRole(session?.user.role) === "SELLER";
   const reasons = normalizeReasons(application.decisionReasons);
   const canContest = !isAdmin && !isSeller && application.status === "REJECTED";
