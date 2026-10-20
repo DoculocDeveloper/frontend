@@ -52,6 +52,9 @@ const contractDataSchema = z.object({
   condominiumValue: z
     .number()
     .min(0, "O valor do condomínio não pode ser negativo."),
+  feesValue: z
+    .number()
+    .min(0, "O valor das taxas não pode ser negativo."),
   adhesionFee: z
     .number()
     .min(0, "A taxa de adesão não pode ser negativa."),
@@ -88,6 +91,7 @@ export function ContractDataPage() {
       propertyState: "",
       rentValue: 0,
       condominiumValue: 0,
+      feesValue: 0,
       adhesionFee: 0,
     },
   });
@@ -144,6 +148,10 @@ export function ContractDataPage() {
       condominiumValue:
         application.condominiumValue !== undefined && application.condominiumValue !== null
           ? Number(application.condominiumValue)
+          : 0,
+      feesValue:
+        application.feesValue !== undefined && application.feesValue !== null
+          ? Number(application.feesValue)
           : 0,
       adhesionFee:
         application.adhesionFee !== undefined && application.adhesionFee !== null
@@ -239,6 +247,7 @@ export function ContractDataPage() {
       propertyState: values.propertyState,
       rentValue: Number(values.rentValue) || 0,
       condominiumValue: Number(values.condominiumValue) || 0,
+      feesValue: Number(values.feesValue) || 0,
       adhesionFee: Number(values.adhesionFee) || 0,
     });
   }
@@ -511,10 +520,10 @@ export function ContractDataPage() {
               Valores da locação e taxas
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
-              Revise ou ajuste os valores do aluguel, condomínio e taxa de adesão que constarão no contrato.
+              Revise ou ajuste os valores do aluguel, condomínio, taxas e taxa de adesão que constarão no contrato.
             </p>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
+          <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label htmlFor="rentValue">Aluguel (R$)</Label>
               <Input
@@ -554,6 +563,27 @@ export function ContractDataPage() {
               />
               <p className="text-xs text-muted-foreground">
                 Valor mensal estimado do condomínio.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="feesValue">Taxas (R$)</Label>
+              <Input
+                id="feesValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                className="h-11 rounded-2xl bg-white"
+                {...form.register("feesValue", {
+                  valueAsNumber: true,
+                })}
+              />
+              <FieldError
+                message={form.formState.errors.feesValue?.message}
+              />
+              <p className="text-xs text-muted-foreground">
+                Valor mensal de outras taxas.
               </p>
             </div>
 
