@@ -46,6 +46,12 @@ const contractDataSchema = z.object({
     .string()
     .min(2, "UF obrigatória.")
     .max(2, "Use a UF com 2 letras."),
+  rentValue: z
+    .number()
+    .min(0.01, "O valor do aluguel deve ser maior que zero."),
+  condominiumValue: z
+    .number()
+    .min(0, "O valor do condomínio não pode ser negativo."),
   adhesionFee: z
     .number()
     .min(0, "A taxa de adesão não pode ser negativa."),
@@ -80,6 +86,8 @@ export function ContractDataPage() {
       propertyNeighborhood: "",
       propertyCity: "",
       propertyState: "",
+      rentValue: 0,
+      condominiumValue: 0,
       adhesionFee: 0,
     },
   });
@@ -129,6 +137,14 @@ export function ContractDataPage() {
       propertyNeighborhood: application.propertyNeighborhood ?? "",
       propertyCity: application.propertyCity ?? "",
       propertyState: application.propertyState ?? "",
+      rentValue:
+        application.rentValue !== undefined && application.rentValue !== null
+          ? Number(application.rentValue)
+          : 0,
+      condominiumValue:
+        application.condominiumValue !== undefined && application.condominiumValue !== null
+          ? Number(application.condominiumValue)
+          : 0,
       adhesionFee:
         application.adhesionFee !== undefined && application.adhesionFee !== null
           ? Number(application.adhesionFee)
@@ -221,6 +237,8 @@ export function ContractDataPage() {
       propertyNeighborhood: values.propertyNeighborhood,
       propertyCity: values.propertyCity,
       propertyState: values.propertyState,
+      rentValue: Number(values.rentValue) || 0,
+      condominiumValue: Number(values.condominiumValue) || 0,
       adhesionFee: Number(values.adhesionFee) || 0,
     });
   }
@@ -490,13 +508,55 @@ export function ContractDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="size-5 text-primary" />
-              Taxa de adesão
+              Valores da locação e taxas
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
-              Defina a taxa de adesão que constará no contrato de locação.
+              Revise ou ajuste os valores do aluguel, condomínio e taxa de adesão que constarão no contrato.
             </p>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="rentValue">Aluguel (R$)</Label>
+              <Input
+                id="rentValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                className="h-11 rounded-2xl bg-white"
+                {...form.register("rentValue", {
+                  valueAsNumber: true,
+                })}
+              />
+              <FieldError
+                message={form.formState.errors.rentValue?.message}
+              />
+              <p className="text-xs text-muted-foreground">
+                Valor mensal do aluguel.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="condominiumValue">Condomínio (R$)</Label>
+              <Input
+                id="condominiumValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                className="h-11 rounded-2xl bg-white"
+                {...form.register("condominiumValue", {
+                  valueAsNumber: true,
+                })}
+              />
+              <FieldError
+                message={form.formState.errors.condominiumValue?.message}
+              />
+              <p className="text-xs text-muted-foreground">
+                Valor mensal estimado do condomínio.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="adhesionFee">Taxa de adesão (R$)</Label>
               <Input
@@ -514,7 +574,7 @@ export function ContractDataPage() {
                 message={form.formState.errors.adhesionFee?.message}
               />
               <p className="text-xs text-muted-foreground">
-                Informe o valor acordado com o locatário (deixe 0 se não houver taxa de adesão).
+                Deixe 0 se não houver taxa de adesão acordada.
               </p>
             </div>
           </CardContent>

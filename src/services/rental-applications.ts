@@ -181,6 +181,14 @@ export async function fillContractData(
       propertyCity: body.propertyCity.trim(),
       propertyState: body.propertyState.trim().toUpperCase(),
       adhesionFee: body.adhesionFee ?? 0,
+      rentValue:
+        body.rentValue !== undefined && body.rentValue !== null
+          ? Number(body.rentValue)
+          : undefined,
+      condominiumValue:
+        body.condominiumValue !== undefined && body.condominiumValue !== null
+          ? Number(body.condominiumValue)
+          : undefined,
     },
   );
 

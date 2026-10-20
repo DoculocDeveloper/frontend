@@ -222,6 +222,8 @@ export type ContractDataBody = {
   propertyCity: string;
   propertyState: string;
   adhesionFee?: number;
+  rentValue?: number;
+  condominiumValue?: number;
 };
 
 export type Wallet = {
