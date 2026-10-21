@@ -87,7 +87,10 @@ function ApplicationMobileCard({
             <p className="text-xs text-muted-foreground">{application.documentType}</p>
           )}
           <div className="mt-2 flex flex-wrap gap-2">
-            <ApplicationStatusBadge status={application.status} />
+            <ApplicationStatusBadge
+              status={application.status}
+              signatureStatus={application.contract?.signatureStatus}
+            />
           </div>
         </div>
       </div>
@@ -249,7 +252,12 @@ export function ApplicationsTable({
       {
         accessorKey: "status",
         header: "Status atual",
-        cell: ({ row }) => <ApplicationStatusBadge status={row.original.status} />,
+        cell: ({ row }) => (
+          <ApplicationStatusBadge
+            status={row.original.status}
+            signatureStatus={row.original.contract?.signatureStatus}
+          />
+        ),
       },
       {
         accessorKey: "createdAt",

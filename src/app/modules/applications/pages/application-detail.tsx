@@ -385,7 +385,10 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                 Resultado da análise
               </CardTitle>
               <div className="flex flex-wrap gap-2">
-                <ApplicationStatusBadge status={application.status} />
+                <ApplicationStatusBadge
+                  status={application.status}
+                  signatureStatus={application.contract?.signatureStatus}
+                />
               </div>
             </div>
           </CardHeader>

@@ -14,7 +14,26 @@ const statusClasses: Record<RentalApplicationStatus, string> = {
   CANCELLED: "border-stone-300 bg-stone-100 text-stone-700",
 };
 
-export function ApplicationStatusBadge({ status }: { status: RentalApplicationStatus }) {
+export function ApplicationStatusBadge({
+  status,
+  signatureStatus,
+}: {
+  status: RentalApplicationStatus;
+  signatureStatus?: string | null;
+}) {
+  const isSigned = status === "CONTRACT_GENERATED" && signatureStatus === "SIGNED";
+
+  if (isSigned) {
+    return (
+      <Badge
+        variant="outline"
+        className="h-7 rounded-full px-3 border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold"
+      >
+        Contrato assinado
+      </Badge>
+    );
+  }
+
   return (
     <Badge variant="outline" className={cn("h-7 rounded-full px-3", statusClasses[status])}>
       {applicationStatusLabels[status]}
