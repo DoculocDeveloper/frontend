@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Download, FileCheck2, FileClock, FileSearch, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -15,26 +15,6 @@ import { cn } from "@/lib/utils";
 import { ApplicationsTable } from "../components/applications-table";
 
 type ContractTab = "PENDING" | "SIGNED";
-
-function isRejectedOrConsulted(status: string) {
-  return ["REJECTED", "ADMIN_REJECTED", "CONSULTED", "CANCELLED", "CONTESTED"].includes(status);
-}
-
-function isSignedContract(app: RentalApplication) {
-  if (isRejectedOrConsulted(app.status)) return false;
-  return app.status === "CONTRACT_GENERATED" && app.contract?.signatureStatus === "SIGNED";
-}
-
-function isPendingContract(app: RentalApplication) {
-  if (isRejectedOrConsulted(app.status)) return false;
-  // Casos aguardando geração de contrato
-  if (app.status === "WAITING_ADMIN_CONTRACT") return true;
-  // Contratos que foram gerados mas NÃO estão 100% assinados
-  if (app.status === "CONTRACT_GENERATED" && app.contract?.signatureStatus !== "SIGNED") {
-    return true;
-  }
-  return false;
-}
 
 export function ContractsPage({ isAdmin = false }: { isAdmin?: boolean }) {
   const [activeTab, setActiveTab] = useState<ContractTab>("PENDING");
@@ -58,73 +38,47 @@ export function ContractsPage({ isAdmin = false }: { isAdmin?: boolean }) {
     setPage(1);
   }
 
-  // 1. Busca contratos gerados
-  const { data: generatedData, isLoading: isLoadingGenerated } = useQuery({
-    queryKey: ["contracts-generated-list", debouncedDocument, isAdmin],
+  // 1. Busca lista de contratos paginada para a aba ativa
+  const { data: listData, isLoading } = useQuery({
+    queryKey: ["contracts-tab-list", activeTab, debouncedDocument, page, perPage, isAdmin],
     queryFn: () =>
       listRentalApplications({
-        status: "CONTRACT_GENERATED",
         contractView: activeTab,
         document: debouncedDocument,
-        page: 1,
-        perPage: 100,
+        page,
+        perPage,
       }),
   });
 
-  // 2. Busca casos com dados preenchidos aguardando geração do contrato
-  const { data: waitingData, isLoading: isLoadingWaiting } = useQuery({
-    queryKey: ["contracts-waiting-list", debouncedDocument, isAdmin],
+  // 2. Contagem e status de Pendentes
+  const { data: pendingCountData } = useQuery({
+    queryKey: ["contracts-count-pending", debouncedDocument, isAdmin],
     queryFn: () =>
       listRentalApplications({
-        status: "WAITING_ADMIN_CONTRACT",
         contractView: "PENDING",
         document: debouncedDocument,
         page: 1,
-        perPage: 100,
+        perPage: 1,
       }),
   });
 
-  const isLoading = isLoadingGenerated || isLoadingWaiting;
+  // 3. Contagem e status de Assinados (100% assinados)
+  const { data: signedCountData } = useQuery({
+    queryKey: ["contracts-count-signed", debouncedDocument, isAdmin],
+    queryFn: () =>
+      listRentalApplications({
+        contractView: "SIGNED",
+        document: debouncedDocument,
+        page: 1,
+        perPage: 1,
+      }),
+  });
 
-  // Unifica e remove qualquer status de reprovado ou consultado
-  const allContractApps = useMemo(() => {
-    const list = [
-      ...(generatedData?.applications ?? []),
-      ...(waitingData?.applications ?? []),
-    ];
-    const map = new Map<string, RentalApplication>();
-    for (const app of list) {
-      if (!isRejectedOrConsulted(app.status)) {
-        map.set(app.id, app);
-      }
-    }
-    return Array.from(map.values());
-  }, [generatedData, waitingData]);
+  const pendingCount = pendingCountData?.meta?.total ?? 0;
+  const signedCount = signedCountData?.meta?.total ?? 0;
 
-  // Lista de pendentes: gerou mas não 100% assinado + aguardando gerar
-  const pendingApplications = useMemo(
-    () => allContractApps.filter(isPendingContract),
-    [allContractApps],
-  );
-
-  // Lista de assinados: 100% assinados
-  const signedApplications = useMemo(
-    () => allContractApps.filter(isSignedContract),
-    [allContractApps],
-  );
-
-  const pendingCount = pendingApplications.length;
-  const signedCount = signedApplications.length;
-
-  const currentList = activeTab === "PENDING" ? pendingApplications : signedApplications;
-
-  // Paginação
-  const paginatedApplications = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return currentList.slice(start, start + perPage);
-  }, [currentList, page, perPage]);
-
-  const lastPage = Math.max(1, Math.ceil(currentList.length / perPage));
+  const applications = listData?.applications ?? [];
+  const meta = listData?.meta;
 
   async function handleDownload(application: RentalApplication) {
     if (!application.contract?.id) return;
@@ -247,7 +201,7 @@ export function ContractsPage({ isAdmin = false }: { isAdmin?: boolean }) {
 
           <div className="flex w-full items-center justify-center gap-2 rounded-full border bg-stone-50 px-3 py-2 text-sm text-muted-foreground sm:w-auto">
             <Download className="size-4" />
-            {currentList.length} registros
+            {meta?.total ?? 0} registros
           </div>
         </div>
       </div>
@@ -259,24 +213,26 @@ export function ContractsPage({ isAdmin = false }: { isAdmin?: boolean }) {
             <div key={index} className="h-24 animate-pulse rounded-3xl border bg-white/70" />
           ))}
         </div>
-      ) : paginatedApplications.length > 0 ? (
+      ) : applications.length > 0 ? (
         <>
           <ApplicationsTable
-            applications={paginatedApplications}
+            applications={applications}
             basePath={basePath}
             isAdmin={isAdmin}
             onDownloadContract={handleDownload}
             onDownloadSignedContract={handleDownloadSigned}
           />
 
-          <Pagination
-            page={page}
-            perPage={perPage}
-            total={currentList.length}
-            lastPage={lastPage}
-            onPageChange={handlePageChange}
-            onPerPageChange={handlePerPageChange}
-          />
+          {meta && (
+            <Pagination
+              page={page}
+              perPage={perPage}
+              total={meta.total}
+              lastPage={meta.lastPage}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+            />
+          )}
         </>
       ) : (
         <EmptyState
