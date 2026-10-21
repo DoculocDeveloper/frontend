@@ -189,6 +189,10 @@ export async function fillContractData(
         body.condominiumValue !== undefined && body.condominiumValue !== null
           ? Number(body.condominiumValue)
           : undefined,
+      feesValue:
+        body.feesValue !== undefined && body.feesValue !== null
+          ? Number(body.feesValue)
+          : undefined,
     },
   );
 

@@ -247,6 +247,7 @@ export type ContractDataBody = {
   adhesionFee?: number;
   rentValue?: number;
   condominiumValue?: number;
+  feesValue?: number;
 };
 
 export type Wallet = {
