@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useMemo, type ReactNode } from "react";
 import { Eye, Download, FileText, Building2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type ColumnDef,
   flexRender,
@@ -19,7 +20,8 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate, formatDocument } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { RentalApplication } from "@/types/doculoc";
+import { type RentalApplication, isApplicationUnread } from "@/types/doculoc";
+import { markApplicationAsViewed } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "./application-status-badge";
 
 function MobileInfo({ label, value }: { label: string; value: ReactNode }) {
@@ -38,26 +40,44 @@ function ApplicationMobileCard({
   basePath,
   isAdmin,
   onDownloadContract,
+  onViewApplication,
 }: {
   application: RentalApplication;
   basePath: string;
   isAdmin: boolean;
   onDownloadContract?: (application: RentalApplication) => void;
+  onViewApplication?: (application: RentalApplication) => void;
 }) {
   const hasContract = application.status === "CONTRACT_GENERATED" && application.contract?.id;
   const requester = application.requester;
   const requesterName = requester?.realEstateProfile?.name ?? requester?.name ?? "-";
+  const isUnread = isAdmin && isApplicationUnread(application);
 
   return (
     <article className="rounded-3xl border bg-white/85 p-4 shadow-sm backdrop-blur">
       <div className="flex min-w-0 items-start gap-3">
-        <div className="shrink-0 rounded-2xl border bg-primary/5 p-2 text-primary">
+        <div
+          className={cn(
+            "shrink-0 rounded-2xl border p-2 transition-colors",
+            isUnread
+              ? "border-red-200 bg-red-50 text-red-600"
+              : "border-border bg-primary/5 text-primary"
+          )}
+        >
           <FileText className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="wrap-break-word text-base font-semibold text-foreground">
-            {formatDocument(application.document, application.documentType)}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="wrap-break-word text-base font-semibold text-foreground">
+              {formatDocument(application.document, application.documentType)}
+            </p>
+            {isUnread ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
+                Nova consulta
+              </span>
+            ) : null}
+          </div>
           {application.tenantName ? (
             <p className="truncate text-xs text-muted-foreground">{application.tenantName}</p>
           ) : (
@@ -100,7 +120,10 @@ function ApplicationMobileCard({
           </Button>
         ) : null}
         <Button asChild variant="outline" className="w-full sm:w-auto">
-          <Link to={`${basePath}/consultas/${application.id}`}>
+          <Link
+            to={`${basePath}/consultas/${application.id}`}
+            onClick={() => onViewApplication?.(application)}
+          >
             <Eye className="size-4" />
             Ver detalhes
           </Link>
@@ -121,6 +144,40 @@ export function ApplicationsTable({
   isAdmin?: boolean;
   onDownloadContract?: (application: RentalApplication) => void;
 }) {
+  const queryClient = useQueryClient();
+
+  const handleView = (application: RentalApplication) => {
+    if (isAdmin && isApplicationUnread(application)) {
+      markApplicationAsViewed(application.id).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["unread-applications-count"] });
+      queryClient.setQueriesData({ queryKey: ["rental-applications"] }, (old: any) => {
+        if (!old?.applications) return old;
+        return {
+          ...old,
+          applications: old.applications.map((app: RentalApplication) =>
+            app.id === application.id
+              ? { ...app, adminViewedAt: new Date().toISOString() }
+              : app
+          ),
+        };
+      });
+      queryClient.setQueriesData(
+        { queryKey: ["admin-dashboard-applications"] },
+        (old: any) => {
+          if (!old?.applications) return old;
+          return {
+            ...old,
+            applications: old.applications.map((app: RentalApplication) =>
+              app.id === application.id
+                ? { ...app, adminViewedAt: new Date().toISOString() }
+                : app
+            ),
+          };
+        }
+      );
+    }
+  };
+
   const columns = useMemo<ColumnDef<RentalApplication>[]>(() => {
     const baseColumns: ColumnDef<RentalApplication>[] = [
       {
@@ -128,15 +185,31 @@ export function ApplicationsTable({
         header: "Consulta",
         cell: ({ row }) => {
           const application = row.original;
+          const isUnread = isAdmin && isApplicationUnread(application);
 
           return (
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="shrink-0 rounded-xl border bg-primary/5 p-1.5 text-primary">
+              <div
+                className={cn(
+                  "shrink-0 rounded-xl border p-1.5 transition-colors",
+                  isUnread
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-border bg-primary/5 text-primary"
+                )}
+              >
                 <FileText className="size-4" />
               </div>
               <div className="min-w-0">
-                <div className="truncate font-medium text-sm text-foreground">
-                  {formatDocument(application.document, application.documentType)}
+                <div className="flex items-center gap-2">
+                  <div className="truncate font-medium text-sm text-foreground">
+                    {formatDocument(application.document, application.documentType)}
+                  </div>
+                  {isUnread ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-red-600 shadow-2xs">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
+                      Nova consulta
+                    </span>
+                  ) : null}
                 </div>
                 <div className="truncate text-xs text-muted-foreground">
                   {application.tenantName || application.documentType}
@@ -204,7 +277,10 @@ export function ApplicationsTable({
                 </Button>
               ) : null}
               <Button asChild variant="outline" size="sm" className="h-8 px-2.5 rounded-xl text-xs">
-                <Link to={`${basePath}/consultas/${application.id}`}>
+                <Link
+                  to={`${basePath}/consultas/${application.id}`}
+                  onClick={() => handleView(application)}
+                >
                   <Eye className="size-3.5" />
                   Ver
                 </Link>
@@ -257,6 +333,7 @@ export function ApplicationsTable({
             basePath={basePath}
             isAdmin={isAdmin}
             onDownloadContract={onDownloadContract}
+            onViewApplication={handleView}
           />
         ))}
       </div>
@@ -280,15 +357,24 @@ export function ApplicationsTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="bg-white/70">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-3 py-2.5">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {table.getRowModel().rows.map((row) => {
+              const isUnread = isAdmin && isApplicationUnread(row.original);
+              return (
+                <TableRow
+                  key={row.id}
+                  className={cn(
+                    "bg-white/70 transition-colors",
+                    isUnread && "bg-red-500/[0.025] hover:bg-red-500/[0.05]"
+                  )}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-3 py-2.5">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

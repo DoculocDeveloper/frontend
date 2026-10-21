@@ -116,9 +116,32 @@ export type RentalApplication = {
   tenants?: RentalApplicationTenant[];
   contract?: Contract | null;
   contests?: Contest[];
+  adminViewedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type UnreadApplicationsCountResponse = {
+  count: number;
+};
+
+export const UNREAD_NOTIFICATIONS_CUTOFF_TIMESTAMP = new Date(
+  "2026-10-21T11:48:00.000Z",
+).getTime();
+
+export function isApplicationUnread(application?: {
+  adminViewedAt?: string | null;
+  createdAt?: string;
+} | null): boolean {
+  if (!application) return false;
+  if (application.adminViewedAt) return false;
+  if (!application.createdAt) return false;
+  const createdTime = new Date(application.createdAt).getTime();
+  return (
+    !Number.isNaN(createdTime) &&
+    createdTime >= UNREAD_NOTIFICATIONS_CUTOFF_TIMESTAMP
+  );
+}
 
 export type DecisionResponse = {
   status: string;

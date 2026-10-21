@@ -229,3 +229,20 @@ export async function reopenRentalApplication(applicationId: string) {
 
   return response.data.application;
 }
+
+export async function getUnreadApplicationsCount() {
+  const response = await api.get<{ count: number }>(
+    "/rental-applications/unread-count",
+  );
+
+  return response.data;
+}
+
+export async function markApplicationAsViewed(applicationId: string) {
+  const response = await api.patch<{ id: string; adminViewedAt: string }>(
+    `/rental-applications/${applicationId}/view`,
+  );
+
+  return response.data;
+}
+

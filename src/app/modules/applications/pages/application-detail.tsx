@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -78,6 +79,12 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     queryFn: () => getRentalApplication(applicationId ?? ""),
     enabled: Boolean(applicationId),
   });
+
+  useEffect(() => {
+    if (isAdmin && application) {
+      queryClient.invalidateQueries({ queryKey: ["unread-applications-count"] });
+    }
+  }, [isAdmin, application, queryClient]);
 
   const generateMutation = useMutation({
     mutationFn: () => generateContract(applicationId ?? ""),
