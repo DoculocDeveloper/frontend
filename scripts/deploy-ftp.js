@@ -69,6 +69,26 @@ async function runDeploy() {
       await client.ensureDir(remoteDir);
     }
 
+    // Limpeza de assets órfãos de builds anteriores para não estourar a cota FTP
+    try {
+      const distAssetsPath = path.resolve(distPath, "assets");
+      if (fs.existsSync(distAssetsPath)) {
+        const localAssets = fs.readdirSync(distAssetsPath);
+        const remoteAssets = await client.list("assets");
+        for (const remoteFile of remoteAssets) {
+          if (!localAssets.includes(remoteFile.name)) {
+            try {
+              await client.remove(`assets/${remoteFile.name}`);
+            } catch {
+              // ignora
+            }
+          }
+        }
+      }
+    } catch {
+      // ignora se a pasta assets ainda não existir
+    }
+
     console.log(`📤 Enviando arquivos do build para a raiz do site...`);
     const startTime = Date.now();
 
