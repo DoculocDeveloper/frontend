@@ -10,6 +10,7 @@ import { RealEstateDashboard } from "./app/modules/real-estate/pages/dashboard";
 import { RealEstateSettingsPage } from "./app/modules/real-estate/pages/settings";
 import { NewApplicationPage } from "./app/modules/real-estate/pages/new-application";
 import { ApplicationsPage } from "./app/modules/applications/pages/applications-page";
+import { ContractsPage } from "./app/modules/applications/pages/contracts-page";
 import { ApplicationDetailPage } from "./app/modules/applications/pages/application-detail";
 import { ContractDataPage } from "./app/modules/applications/pages/contract-data";
 import { ContestApplicationPage } from "./app/modules/applications/pages/contest-application";
@@ -85,6 +86,10 @@ export const router = createBrowserRouter([
         element: <ApplicationsPage />,
       },
       {
+        path: "contratos",
+        element: <ContractsPage />,
+      },
+      {
         path: "consultas/:applicationId",
         element: <ApplicationDetailPage />,
       },
@@ -145,15 +150,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "contratos",
-        element: (
-          <ApplicationsPage
-            isAdmin
-            forcedStatus="WAITING_ADMIN_CONTRACT"
-            eyebrow="Contratos"
-            title="Contratos pendentes"
-            description="Casos com dados de locatário e imóvel preenchidos, prontos para geração do contrato DOCX."
-          />
-        ),
+        element: <ContractsPage isAdmin />,
       },
       {
         path: "consultas/:applicationId",

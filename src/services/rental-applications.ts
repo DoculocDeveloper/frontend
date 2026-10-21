@@ -19,6 +19,14 @@ function buildParams(params?: ListApplicationsParams) {
     cleanParams.set("status", params.status);
   }
 
+  if (params?.signatureStatus) {
+    cleanParams.set("signatureStatus", params.signatureStatus);
+  }
+
+  if (params?.contractView) {
+    cleanParams.set("contractView", params.contractView);
+  }
+
   if (params?.document) {
     const raw = params.document.trim();
     cleanParams.set("document", onlyDigits(raw));

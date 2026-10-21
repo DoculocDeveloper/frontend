@@ -68,6 +68,11 @@ const realEstateItems: NavItem[] = [
     icon: ClipboardList,
   },
   {
+    title: "Contratos",
+    href: "/real_estate/contratos",
+    icon: FileClock,
+  },
+  {
     title: "Configurações",
     href: "/real_estate/configuracoes",
     icon: Settings,
@@ -77,9 +82,14 @@ const realEstateItems: NavItem[] = [
 const sellerItems: NavItem[] = [
   { title: "Dashboard", href: "/real_estate/dashboard", icon: LayoutDashboard },
   {
-    title: "Consultas e Contratos",
+    title: "Minhas consultas",
     href: "/real_estate/consultas",
     icon: ClipboardList,
+  },
+  {
+    title: "Contratos",
+    href: "/real_estate/contratos",
+    icon: FileClock,
   },
 ];
 

@@ -121,3 +121,52 @@ export async function downloadContract(
     window.URL.revokeObjectURL(url);
   }, 1000);
 }
+
+export async function downloadSignedContract(
+  contractId: string,
+  fallbackFileName = "contrato-assinado-doculoc.pdf",
+) {
+  const response = await api.get<Blob>(`/contracts/${contractId}/signed-download`, {
+    responseType: "blob",
+  });
+
+  const contentType = response.headers["content-type"] as string | undefined;
+
+  if (contentType?.includes("application/json")) {
+    const text = await response.data.text();
+    const data = JSON.parse(text) as { url?: string; message?: string };
+
+    if (data.url) {
+      window.open(data.url, "_blank");
+      return;
+    }
+
+    throw new Error(data.message ?? "Não foi possível obter o link do contrato assinado.");
+  }
+
+  const contentDisposition = response.headers["content-disposition"] as
+    | string
+    | undefined;
+
+  const fileName = getFileNameFromContentDisposition(
+    contentDisposition,
+    fallbackFileName,
+  );
+
+  const blob = new Blob([response.data], {
+    type: contentType ?? "application/pdf",
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+  }, 1000);
+}

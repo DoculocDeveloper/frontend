@@ -27,6 +27,14 @@ VITE_API_URL=https://api.doculoc.com.br
    ```
    Os arquivos finais serão gerados na pasta `dist/` prontos para upload na HostGator (incluindo o arquivo `.htaccess` para roteamento SPA).
 
+## Módulos e Funcionalidades
+
+- **Gestão de Contratos (`ContractsPage`)**:
+  - Acessível em `/admin/contratos` (Admin) e `/real_estate/contratos` (Imobiliária e Vendedor).
+  - **Aba Pendentes**: Exibe casos com dados de locatário e imóvel preenchidos aguardando geração de contrato DOCX.
+  - **Aba Assinados**: Exibe contratos com fluxo de assinatura 100% finalizado via Clicksign, permitindo o download direto do documento PDF assinado oficial.
+
+
 
 ## Expanding the ESLint configuration
 

@@ -158,6 +158,8 @@ export type DecisionResponse = {
 
 export type ListApplicationsParams = {
   status?: RentalApplicationStatus | "ALL";
+  signatureStatus?: ContractSignatureStatus;
+  contractView?: "PENDING" | "SIGNED" | "ALL";
   document?: string;
   requesterId?: string;
   page?: number;

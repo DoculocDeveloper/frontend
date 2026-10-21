@@ -40,15 +40,18 @@ function ApplicationMobileCard({
   basePath,
   isAdmin,
   onDownloadContract,
+  onDownloadSignedContract,
   onViewApplication,
 }: {
   application: RentalApplication;
   basePath: string;
   isAdmin: boolean;
   onDownloadContract?: (application: RentalApplication) => void;
+  onDownloadSignedContract?: (application: RentalApplication) => void;
   onViewApplication?: (application: RentalApplication) => void;
 }) {
   const hasContract = application.status === "CONTRACT_GENERATED" && application.contract?.id;
+  const isSigned = application.contract?.signatureStatus === "SIGNED";
   const requester = application.requester;
   const requesterName = requester?.realEstateProfile?.name ?? requester?.name ?? "-";
   const isUnread = isAdmin && isApplicationUnread(application);
@@ -109,14 +112,24 @@ function ApplicationMobileCard({
       </div>
 
       <div className="mt-4 grid gap-2 sm:flex sm:justify-end">
-        {hasContract && onDownloadContract ? (
+        {hasContract && isSigned && onDownloadSignedContract ? (
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+            onClick={() => onDownloadSignedContract(application)}
+          >
+            <Download className="size-4" />
+            Baixar PDF assinado
+          </Button>
+        ) : null}
+        {hasContract && onDownloadContract && (!isSigned || isAdmin) ? (
           <Button
             variant="outline"
             className="w-full sm:w-auto"
             onClick={() => onDownloadContract(application)}
           >
             <Download className="size-4" />
-            Baixar contrato
+            Baixar DOCX
           </Button>
         ) : null}
         <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -138,11 +151,13 @@ export function ApplicationsTable({
   basePath,
   isAdmin = false,
   onDownloadContract,
+  onDownloadSignedContract,
 }: {
   applications: RentalApplication[];
   basePath: string;
   isAdmin?: boolean;
   onDownloadContract?: (application: RentalApplication) => void;
+  onDownloadSignedContract?: (application: RentalApplication) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -262,14 +277,27 @@ export function ApplicationsTable({
         cell: ({ row }) => {
           const application = row.original;
           const hasContract = application.status === "CONTRACT_GENERATED" && application.contract?.id;
+          const isSigned = application.contract?.signatureStatus === "SIGNED";
 
           return (
             <div className="flex items-center justify-end gap-1.5 whitespace-nowrap pr-4">
-              {hasContract && onDownloadContract && isAdmin ? (
+              {hasContract && isSigned && onDownloadSignedContract ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  title="Baixar contrato assinado (PDF oficial Clicksign)"
+                  className="h-8 px-2.5 rounded-xl text-xs font-semibold border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                  onClick={() => onDownloadSignedContract(application)}
+                >
+                  <Download className="size-3.5 mr-1" />
+                  PDF Assinado
+                </Button>
+              ) : null}
+              {hasContract && onDownloadContract && (!isSigned || isAdmin) ? (
                 <Button
                   variant="outline"
                   size="icon-sm"
-                  title="Baixar contrato"
+                  title="Baixar contrato DOCX"
                   className="h-8 w-8 rounded-xl"
                   onClick={() => onDownloadContract(application)}
                 >
@@ -315,7 +343,7 @@ export function ApplicationsTable({
     });
 
     return baseColumns;
-  }, [basePath, isAdmin, onDownloadContract]);
+  }, [basePath, isAdmin, onDownloadContract, onDownloadSignedContract]);
 
   const table = useReactTable({
     data: applications,
@@ -333,6 +361,7 @@ export function ApplicationsTable({
             basePath={basePath}
             isAdmin={isAdmin}
             onDownloadContract={onDownloadContract}
+            onDownloadSignedContract={onDownloadSignedContract}
             onViewApplication={handleView}
           />
         ))}
