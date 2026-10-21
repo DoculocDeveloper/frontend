@@ -126,9 +126,28 @@ export async function downloadSignedContract(
   contractId: string,
   fallbackFileName = "contrato-assinado-doculoc.pdf",
 ) {
-  const response = await api.get<Blob>(`/contracts/${contractId}/signed-download`, {
-    responseType: "blob",
-  });
+  let response;
+
+  try {
+    response = await api.get<Blob>(`/contracts/${contractId}/signed-download`, {
+      responseType: "blob",
+    });
+  } catch (error: any) {
+    if (error?.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const json = JSON.parse(text);
+        if (json?.message) {
+          throw new Error(json.message);
+        }
+      } catch (innerError: any) {
+        if (innerError?.message && innerError !== error) {
+          throw innerError;
+        }
+      }
+    }
+    throw error;
+  }
 
   const contentType = response.headers["content-type"] as string | undefined;
 
@@ -148,10 +167,14 @@ export async function downloadSignedContract(
     | string
     | undefined;
 
-  const fileName = getFileNameFromContentDisposition(
+  let fileName = getFileNameFromContentDisposition(
     contentDisposition,
     fallbackFileName,
   );
+
+  if (!fileName.toLowerCase().endsWith(".pdf")) {
+    fileName = `${fileName.replace(/\.[^/.]+$/, "")}.pdf`;
+  }
 
   const blob = new Blob([response.data], {
     type: contentType ?? "application/pdf",
