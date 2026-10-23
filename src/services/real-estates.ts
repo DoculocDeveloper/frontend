@@ -89,7 +89,6 @@ export async function createSeller(realEstateId: string, data: CreateSellerInput
 
   return response.data;
 }
-
 export async function deleteSeller(realEstateId: string, sellerId: string) {
   const response = await api.delete<{ message: string }>(
     `/real-estates/${realEstateId}/sellers/${sellerId}`,
@@ -97,3 +96,33 @@ export async function deleteSeller(realEstateId: string, sellerId: string) {
 
   return response.data;
 }
+
+export type AvailableSeller = {
+  id: string;
+  name: string;
+  email: string;
+  cpf: string | null;
+  createdAt: string;
+  associatedRealEstates: string[];
+};
+
+export async function listAvailableSellers(realEstateId: string, search?: string) {
+  const response = await api.get<{ sellers: AvailableSeller[] }>(
+    `/real-estates/${realEstateId}/available-sellers`,
+    {
+      params: { search },
+    },
+  );
+
+  return response.data.sellers;
+}
+
+export async function associateSeller(realEstateId: string, sellerId: string) {
+  const response = await api.post<{ message: string; seller: Seller }>(
+    `/real-estates/${realEstateId}/sellers/associate`,
+    { sellerId },
+  );
+
+  return response.data;
+}
+

@@ -34,6 +34,13 @@ VITE_API_URL=https://api.doculoc.com.br
   - **Aba Pendentes**: Exibe casos com dados de locatário e imóvel preenchidos aguardando geração de contrato DOCX.
   - **Aba Assinados**: Exibe contratos com fluxo de assinatura 100% finalizado via Clicksign, permitindo o download direto do documento PDF assinado oficial.
 
+- **Gestão de Vendedores e Múltiplas Imobiliárias (`RealEstateDetailPage`, `AssociateSellerDialog`)**:
+  - Acessível em `/admin/imobiliarias/:id` (aba Vendedores).
+  - Exibe vendedores vinculados à imobiliária selecionada com opção de desvinculação.
+  - Exibe lista de vendedores cadastrados na plataforma disponíveis para associação direta, com busca em tempo real por nome, CPF e e-mail.
+  - Componente modal `AssociateSellerDialog` (`associate-seller-dialog.tsx`) para associação rápida.
+  - Permite que um mesmo vendedor (`SELLER`) pertença a múltiplas imobiliárias simultaneamente.
+
 
 
 ## Expanding the ESLint configuration

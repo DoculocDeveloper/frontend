@@ -7,6 +7,7 @@ import {
   Building2,
   Calendar,
   Crown,
+  Loader2,
   Mail,
   MapPin,
   Phone,
@@ -18,6 +19,14 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -35,7 +44,12 @@ import {
   formatZipCode,
 } from "@/lib/format";
 import { getApiErrorMessage } from "@/services/api";
-import { deleteSeller, getRealEstateById } from "@/services/real-estates";
+import {
+  deleteSeller,
+  getRealEstateById,
+  type Seller,
+} from "@/services/real-estates";
+import { AssociateSellerDialog } from "../components/associate-seller-dialog";
 import { CreateSellerDialog } from "../components/create-seller-dialog";
 import { CreditEditDialog } from "../components/credit-edit-dialog";
 
@@ -43,6 +57,7 @@ export function RealEstateDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("info");
+  const [sellerToRemove, setSellerToRemove] = useState<Seller | null>(null);
 
   const { data: realEstate, isLoading } = useQuery({
     queryKey: ["admin-real-estate", id],
@@ -55,8 +70,10 @@ export function RealEstateDetailPage() {
       return deleteSeller(id!, sellerId);
     },
     onSuccess: () => {
-      toast.success("Vendedor removido com sucesso.");
+      toast.success("Vendedor removido desta imobiliária com sucesso.");
+      setSellerToRemove(null);
       queryClient.invalidateQueries({ queryKey: ["admin-real-estate", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-available-sellers", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-real-estates-list"] });
     },
     onError: (error) => {
@@ -119,6 +136,7 @@ export function RealEstateDetailPage() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <CreditEditDialog userId={realEstate.id} realEstateName={displayName} />
+            <AssociateSellerDialog realEstateId={realEstate.id} realEstateName={displayName} />
             <CreateSellerDialog realEstateId={realEstate.id} realEstateName={displayName} />
           </div>
         }
@@ -306,15 +324,16 @@ export function RealEstateDetailPage() {
         </TabsContent>
 
         {/* Conteúdo Aba 2: Vendedores */}
+        {/* Conteúdo Aba 2: Vendedores */}
         <TabsContent value="sellers" className="mt-4 space-y-4">
           <div className="rounded-3xl border bg-white/85 p-6 shadow-sm backdrop-blur">
             <div>
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Users className="size-5 text-primary" />
-                Vendedores Vinculados
+                Vendedores Vinculados ({sellers.length})
               </h3>
               <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                Os vendedores têm acesso ao portal da imobiliária exclusivamente para visualização de contratos e consultas.
+                Vendedores com autorização de acesso ao portal desta imobiliária para visualização de contratos e consultas.
               </p>
             </div>
           </div>
@@ -330,7 +349,7 @@ export function RealEstateDetailPage() {
                         <p className="font-semibold text-foreground">{seller.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{seller.email}</p>
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Ativo</Badge>
+                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Vinculado</Badge>
                     </div>
 
                     <div className="mt-4 grid gap-2 sm:grid-cols-2 text-xs">
@@ -354,24 +373,20 @@ export function RealEstateDetailPage() {
 
                     <div className="mt-3 flex justify-end">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => {
-                          if (confirm(`Deseja realmente remover o vendedor ${seller.name}?`)) {
-                            deleteSellerMutation.mutate(seller.id);
-                          }
-                        }}
+                        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 gap-1.5"
+                        onClick={() => setSellerToRemove(seller)}
                       >
-                        <Trash2 className="size-4 mr-1.5" />
-                        Remover vendedor
+                        <Trash2 className="size-4" />
+                        Remover da imobiliária
                       </Button>
                     </div>
                   </article>
                 ))}
               </div>
 
-              {/* Tabela desktop dos vendedores */}
+              {/* Tabela desktop dos vendedores vinculados */}
               <div className="hidden overflow-hidden rounded-3xl border bg-white/85 shadow-sm backdrop-blur lg:block">
                 <Table>
                   <TableHeader className="bg-stone-50/80">
@@ -402,22 +417,19 @@ export function RealEstateDetailPage() {
                         <TableCell className="text-sm">{formatDate(seller.createdAt)}</TableCell>
                         <TableCell>
                           <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                            Ativo
+                            Vinculado
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title="Remover vendedor"
-                            onClick={() => {
-                              if (confirm(`Deseja realmente remover o vendedor ${seller.name}?`)) {
-                                deleteSellerMutation.mutate(seller.id);
-                              }
-                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 gap-1.5 shadow-2xs"
+                            title="Remover vendedor desta imobiliária"
+                            onClick={() => setSellerToRemove(seller)}
                           >
                             <Trash2 className="size-4" />
+                            Remover da imobiliária
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -429,12 +441,66 @@ export function RealEstateDetailPage() {
           ) : (
             <EmptyState
               icon={<Users className="size-8" />}
-              title="Nenhum vendedor cadastrado"
-              description="Cadastre vendedores para que possam acompanhar os contratos gerados desta imobiliária com visualização segura."
+              title="Nenhum vendedor vinculado a esta imobiliária"
+              description="Clique em 'Lista de vendedores' no topo para associar um vendedor existente ou em 'Cadastrar vendedor' para registrar um novo."
             />
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Modal de confirmação para remoção de vendedor da imobiliária */}
+      <Dialog
+        open={Boolean(sellerToRemove)}
+        onOpenChange={(open) => !open && setSellerToRemove(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="size-5" />
+              Remover vendedor da imobiliária
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed">
+              Tem certeza de que deseja remover o vendedor{" "}
+              <strong>{sellerToRemove?.name}</strong> da imobiliária{" "}
+              <strong>{displayName}</strong>?
+              <br /><br />
+              Ele não terá mais acesso aos contratos e consultas desta imobiliária. Caso ele pertença a outras imobiliárias, suas outras vinculações permanecerão inalteradas.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setSellerToRemove(null)}
+              disabled={deleteSellerMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              disabled={deleteSellerMutation.isPending}
+              onClick={() => {
+                if (sellerToRemove) {
+                  deleteSellerMutation.mutate(sellerToRemove.id);
+                }
+              }}
+            >
+              {deleteSellerMutation.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Removendo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-4" />
+                  Remover da imobiliária
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
