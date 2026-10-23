@@ -27,28 +27,60 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { onlyDigits } from "@/lib/format";
+import { formatDocument, onlyDigits } from "@/lib/format";
 import { getApiErrorMessage } from "@/services/api";
 
-const signUpForm = z.object({
-  email: z.string().email("Informe um e-mail válido."),
-  password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
-  role: z.enum(["REAL_ESTATE", "ADMIN"]),
-  realEstateProfile: z
-    .object({
-      name: z.string().min(3, "O nome da imobiliária deve ter pelo menos 3 caracteres."),
-      cnpj: z
-        .string()
-        .min(1, "Informe o CNPJ.")
-        .refine(
-          (val) => onlyDigits(val).length === 14,
-          "CNPJ deve conter exatamente 14 dígitos.",
-        ),
-      phone: z.string().min(8, "Informe um telefone válido com DDD."),
-      responsibleName: z.string().min(3, "O nome do responsável deve ter pelo menos 3 caracteres."),
-    })
-    .optional(),
-});
+const signUpForm = z
+  .object({
+    email: z.string().email("Informe um e-mail válido."),
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
+    role: z.enum(["REAL_ESTATE", "ADMIN"]),
+    realEstateProfile: z
+      .object({
+        name: z.string().min(3, "O nome da imobiliária deve ter pelo menos 3 caracteres."),
+        cnpj: z.string().optional(),
+        cpf: z.string().optional(),
+        phone: z.string().min(8, "Informe um telefone válido com DDD."),
+        responsibleName: z.string().min(3, "O nome do responsável deve ter pelo menos 3 caracteres."),
+      })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "REAL_ESTATE" && data.realEstateProfile) {
+      const cnpjDigits = onlyDigits(data.realEstateProfile.cnpj);
+      const cpfDigits = onlyDigits(data.realEstateProfile.cpf);
+
+      if (!cnpjDigits && !cpfDigits) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["realEstateProfile", "cnpj"],
+          message: "Informe ao menos um: CNPJ ou CPF.",
+        });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["realEstateProfile", "cpf"],
+          message: "Informe ao menos um: CNPJ ou CPF.",
+        });
+        return;
+      }
+
+      if (cnpjDigits && cnpjDigits.length !== 14) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["realEstateProfile", "cnpj"],
+          message: "CNPJ deve conter exatamente 14 dígitos.",
+        });
+      }
+
+      if (cpfDigits && cpfDigits.length !== 11) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["realEstateProfile", "cpf"],
+          message: "CPF deve conter exatamente 11 dígitos.",
+        });
+      }
+    }
+  });
 
 type SignUpForm = z.infer<typeof signUpForm>;
 
@@ -60,6 +92,7 @@ export function RegisterForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { isSubmitting, errors },
   } = useForm<SignUpForm>({
     resolver: zodResolver(signUpForm),
@@ -70,6 +103,7 @@ export function RegisterForm({
       realEstateProfile: {
         name: "",
         cnpj: "",
+        cpf: "",
         phone: "",
         responsibleName: "",
       },
@@ -141,14 +175,44 @@ export function RegisterForm({
               id="real-estate-cnpj"
               type="text"
               placeholder="00.000.000/0000-00"
-              required
-              {...register("realEstateProfile.cnpj")}
+              maxLength={18}
+              {...register("realEstateProfile.cnpj", {
+                onChange: (e) => {
+                  const formatted = formatDocument(e.target.value, "CNPJ");
+                  setValue("realEstateProfile.cnpj", formatted);
+                },
+              })}
             />
           </InputGroup>
         </Field>
         { errors.realEstateProfile?.cnpj && (
           <FieldDescription className="text-rose-500">
             {errors.realEstateProfile.cnpj.message}
+          </FieldDescription>
+        )}
+        <Field>
+          <FieldLabel htmlFor="real-estate-cpf">CPF</FieldLabel>
+          <InputGroup>
+            <InputGroupAddon>
+              <FileText />
+            </InputGroupAddon>
+            <InputGroupInput
+              id="real-estate-cpf"
+              type="text"
+              placeholder="000.000.000-00"
+              maxLength={14}
+              {...register("realEstateProfile.cpf", {
+                onChange: (e) => {
+                  const formatted = formatDocument(e.target.value, "CPF");
+                  setValue("realEstateProfile.cpf", formatted);
+                },
+              })}
+            />
+          </InputGroup>
+        </Field>
+        { errors.realEstateProfile?.cpf && (
+          <FieldDescription className="text-rose-500">
+            {errors.realEstateProfile.cpf.message}
           </FieldDescription>
         )}
         <Field>
