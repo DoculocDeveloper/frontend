@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader, PageShell } from "@/app/modules/_components/page-shell";
-import { formatCurrency, onlyDigits } from "@/lib/format";
+import { formatCurrency, formatCurrencyInput, formatDocument, onlyDigits, parseCurrency } from "@/lib/format";
 import {
   getApiErrorCode,
   getApiErrorMessage,
@@ -39,9 +39,18 @@ const newApplicationSchema = z
   .object({
     documentType: z.enum(["CPF", "CNPJ"]),
     document: z.string().min(11, "Informe um CPF ou CNPJ válido."),
-    rentValue: z.number().positive("Informe o valor do aluguel."),
-    condominiumValue: z.number().min(0, "Valor inválido."),
-    feesValue: z.number().min(0, "Valor inválido."),
+    rentValue: z
+      .union([z.string(), z.number()])
+      .transform(parseCurrency)
+      .pipe(z.number().positive("Informe o valor do aluguel.")),
+    condominiumValue: z
+      .union([z.string(), z.number()])
+      .transform(parseCurrency)
+      .pipe(z.number().min(0, "Valor inválido.")),
+    feesValue: z
+      .union([z.string(), z.number()])
+      .transform(parseCurrency)
+      .pipe(z.number().min(0, "Valor inválido.")),
   })
   .superRefine((data, context) => {
     const length = onlyDigits(data.document).length;
@@ -63,7 +72,8 @@ const newApplicationSchema = z
     }
   });
 
-type NewApplicationForm = z.infer<typeof newApplicationSchema>;
+type NewApplicationInput = z.input<typeof newApplicationSchema>;
+type NewApplicationOutput = z.output<typeof newApplicationSchema>;
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-rose-600">{message}</p> : null;
@@ -72,25 +82,25 @@ function FieldError({ message }: { message?: string }) {
 export function NewApplicationPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const form = useForm<NewApplicationForm>({
+  const form = useForm<NewApplicationInput, any, NewApplicationOutput>({
     resolver: zodResolver(newApplicationSchema),
     defaultValues: {
       documentType: "CPF",
       document: "",
-      rentValue: 0,
-      condominiumValue: 0,
-      feesValue: 0,
+      rentValue: "",
+      condominiumValue: "0,00",
+      feesValue: "0,00",
     },
   });
 
   const documentType = form.watch("documentType");
-  const rentValue = Number(form.watch("rentValue") || 0);
-  const condominiumValue = Number(form.watch("condominiumValue") || 0);
-  const feesValue = Number(form.watch("feesValue") || 0);
+  const rentValue = parseCurrency(form.watch("rentValue"));
+  const condominiumValue = parseCurrency(form.watch("condominiumValue"));
+  const feesValue = parseCurrency(form.watch("feesValue"));
   const requestedExpense = rentValue + condominiumValue + feesValue;
 
   const mutation = useMutation({
-    mutationFn: (values: NewApplicationForm) => {
+    mutationFn: (values: NewApplicationOutput) => {
       const body: CreateApplicationBody = {
         document: values.document,
         rentValue: values.rentValue,
@@ -227,7 +237,15 @@ export function NewApplicationPage() {
                         ? "000.000.000-00"
                         : "00.000.000/0000-00"
                     }
-                    {...form.register("document")}
+                    {...form.register("document", {
+                      onChange: (e) => {
+                        const formatted = formatDocument(
+                          e.target.value,
+                          documentType,
+                        );
+                        form.setValue("document", formatted);
+                      },
+                    })}
                   />
                 </div>
                 <FieldError message={form.formState.errors.document?.message} />
@@ -236,44 +254,80 @@ export function NewApplicationPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="rentValue">Aluguel</Label>
-                  <Input
-                    id="rentValue"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="h-12 rounded-2xl"
-                    {...form.register("rentValue", { valueAsNumber: true })}
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      id="rentValue"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="h-12 rounded-2xl pl-10"
+                      {...form.register("rentValue", {
+                        onBlur: (e) => {
+                          const parsed = parseCurrency(e.target.value);
+                          if (parsed > 0) {
+                            form.setValue("rentValue", formatCurrencyInput(parsed), {
+                              shouldValidate: true,
+                            });
+                          }
+                        },
+                      })}
+                    />
+                  </div>
                   <FieldError
                     message={form.formState.errors.rentValue?.message}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="condominiumValue">Condomínio</Label>
-                  <Input
-                    id="condominiumValue"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="h-12 rounded-2xl"
-                    {...form.register("condominiumValue", {
-                      valueAsNumber: true,
-                    })}
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      id="condominiumValue"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="h-12 rounded-2xl pl-10"
+                      {...form.register("condominiumValue", {
+                        onBlur: (e) => {
+                          const parsed = parseCurrency(e.target.value);
+                          form.setValue("condominiumValue", formatCurrencyInput(parsed), {
+                            shouldValidate: true,
+                          });
+                        },
+                      })}
+                    />
+                  </div>
                   <FieldError
                     message={form.formState.errors.condominiumValue?.message}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="feesValue">Taxas</Label>
-                  <Input
-                    id="feesValue"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="h-12 rounded-2xl"
-                    {...form.register("feesValue", { valueAsNumber: true })}
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      id="feesValue"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="h-12 rounded-2xl pl-10"
+                      {...form.register("feesValue", {
+                        onBlur: (e) => {
+                          const parsed = parseCurrency(e.target.value);
+                          form.setValue("feesValue", formatCurrencyInput(parsed), {
+                            shouldValidate: true,
+                          });
+                        },
+                      })}
+                    />
+                  </div>
                   <FieldError
                     message={form.formState.errors.feesValue?.message}
                   />
