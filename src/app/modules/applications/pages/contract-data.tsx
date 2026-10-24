@@ -54,7 +54,7 @@ const contractDataSchema = z.object({
     .min(0, "O valor do condomínio não pode ser negativo."),
   feesValue: z
     .number()
-    .min(0, "O valor das taxas não pode ser negativo."),
+    .min(0, "O valor do IPTU não pode ser negativo."),
   adhesionFee: z
     .number()
     .min(0, "A taxa de adesão não pode ser negativa."),
@@ -517,10 +517,10 @@ export function ContractDataPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="size-5 text-primary" />
-              Valores da locação e taxas
+              Valores da locação e IPTU
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
-              Revise ou ajuste os valores do aluguel, condomínio, taxas e taxa de adesão que constarão no contrato.
+              Revise ou ajuste os valores do aluguel, condomínio, IPTU e taxa de adesão que constarão no contrato.
             </p>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -567,7 +567,7 @@ export function ContractDataPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feesValue">Taxas (R$)</Label>
+              <Label htmlFor="feesValue">IPTU (R$)</Label>
               <Input
                 id="feesValue"
                 type="number"
@@ -583,7 +583,7 @@ export function ContractDataPage() {
                 message={form.formState.errors.feesValue?.message}
               />
               <p className="text-xs text-muted-foreground">
-                Valor mensal de outras taxas.
+                Valor mensal do IPTU.
               </p>
             </div>
 

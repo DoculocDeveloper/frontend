@@ -166,7 +166,7 @@ export function NewApplicationPage() {
     form.setValue("document", "");
   }
 
-  function handleSubmit(values: NewApplicationForm) {
+  function handleSubmit(values: NewApplicationOutput) {
     mutation.mutate(values);
   }
 
@@ -307,7 +307,7 @@ export function NewApplicationPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="feesValue">Taxas</Label>
+                  <Label htmlFor="feesValue">IPTU</Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                       R$
@@ -396,7 +396,7 @@ export function NewApplicationPage() {
                   </span>
                 </div>
                 <div className="flex min-w-0 items-center justify-between gap-3">
-                  <span>Taxas</span>
+                  <span>IPTU</span>
                   <span className="shrink-0">{formatCurrency(feesValue)}</span>
                 </div>
               </div>

@@ -396,7 +396,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             <div className="grid gap-3 sm:grid-cols-3">
               <DetailItem label="Aluguel" value={formatCurrency(application.rentValue)} />
               <DetailItem label="Condomínio" value={formatCurrency(application.condominiumValue)} />
-              <DetailItem label="Taxas" value={formatCurrency(application.feesValue)} />
+              <DetailItem label="IPTU" value={formatCurrency(application.feesValue)} />
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <DetailItem label="Pacote solicitado" value={formatCurrency(application.requestedExpense)} />
