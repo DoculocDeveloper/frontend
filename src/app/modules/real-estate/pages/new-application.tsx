@@ -116,12 +116,12 @@ export function NewApplicationPage() {
       await queryClient.invalidateQueries({
         queryKey: ["rental-applications"],
       });
-      const recommended = data.application.recommendation === "RECOMMENDED";
+      const isApproved = data.application.status === "WAITING_CONTRACT_DATA";
 
       toast.success(
-        recommended ? "Consulta recomendada." : "Consulta em análise.",
+        isApproved ? "Consulta recomendada." : "Consulta em análise.",
         {
-          description: recommended
+          description: isApproved
             ? "Agora preencha os dados para o contrato."
             : "A análise está em verificação pela equipe Doculoc.",
         },

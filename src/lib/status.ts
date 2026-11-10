@@ -7,7 +7,7 @@ export const applicationStatusLabels: Record<RentalApplicationStatus, string> = 
   CONTRACT_GENERATED: "Contrato gerado",
   REJECTED: "Em análise",
   CONTESTED: "Contestada",
-  ADMIN_REJECTED: "Reprovado pelo admin",
+  ADMIN_REJECTED: "Reprovado",
   CANCELLED: "Cancelada",
 };
 
@@ -18,7 +18,7 @@ export const applicationStatusDescriptions: Record<RentalApplicationStatus, stri
   CONTRACT_GENERATED: "Contrato pronto para download.",
   REJECTED: "Análise em verificação da equipe Doculoc.",
   CONTESTED: "Contestação enviada. Aguardando decisão manual do admin.",
-  ADMIN_REJECTED: "Caso reprovado manualmente pelo admin.",
+  ADMIN_REJECTED: "Consulta reprovada.",
   CANCELLED: "Consulta cancelada.",
 };
 
