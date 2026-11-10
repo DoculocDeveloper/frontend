@@ -661,12 +661,14 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
         ) : null}
       </div>
 
-      <div className="mt-5">
-        <OragoAnalysisReport
-          oragoData={application.oragoData}
-          documentType={application.documentType}
-        />
-      </div>
+      {isAdmin && application.oragoData ? (
+        <div className="mt-5">
+          <OragoAnalysisReport
+            oragoData={application.oragoData}
+            documentType={application.documentType}
+          />
+        </div>
+      ) : null}
     </PageShell>
   );
 }
