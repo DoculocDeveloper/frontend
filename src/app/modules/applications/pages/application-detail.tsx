@@ -52,6 +52,7 @@ import {
 import { getRentalApplication } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
+import { OragoAnalysisReport } from "../components/orago-analysis-report";
 import {
   CancelSignatureDialog,
   ReopenContractDataDialog,
@@ -658,6 +659,13 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             </CardContent>
           </Card>
         ) : null}
+      </div>
+
+      <div className="mt-5">
+        <OragoAnalysisReport
+          oragoData={application.oragoData}
+          documentType={application.documentType}
+        />
       </div>
     </PageShell>
   );

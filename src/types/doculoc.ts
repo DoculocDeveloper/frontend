@@ -117,6 +117,7 @@ export type RentalApplication = {
   contract?: Contract | null;
   contests?: Contest[];
   adminViewedAt?: string | null;
+  oragoData?: any;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -131,6 +132,7 @@ export const UNREAD_NOTIFICATIONS_CUTOFF_TIMESTAMP = new Date(
 
 export function isApplicationUnread(application?: {
   adminViewedAt?: string | null;
+  oragoData?: any;
   createdAt?: string;
 } | null): boolean {
   if (!application) return false;
