@@ -10,6 +10,7 @@ import type {
   ListApplicationsParams,
   ListApplicationsResponse,
   RentalApplication,
+  RentalApplicationMessage,
 } from "@/types/doculoc";
 
 function buildParams(params?: ListApplicationsParams) {
@@ -272,5 +273,60 @@ export async function markApplicationAsViewed(applicationId: string) {
   );
 
   return response.data;
+}
+
+export async function listApplicationMessages(applicationId: string) {
+  const response = await api.get<{ messages: RentalApplicationMessage[] }>(
+    `/rental-applications/${applicationId}/messages`,
+  );
+  return response.data.messages;
+}
+
+export async function sendApplicationMessage(
+  applicationId: string,
+  data: { content?: string; file?: File },
+) {
+  const formData = new FormData();
+  if (data.content) {
+    formData.append("content", data.content);
+  }
+  if (data.file) {
+    formData.append("file", data.file);
+  }
+
+  const response = await api.post<{ message: RentalApplicationMessage }>(
+    `/rental-applications/${applicationId}/messages`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+
+  return response.data.message;
+}
+
+export async function downloadMessageAttachment(
+  applicationId: string,
+  messageId: string,
+  fileName?: string,
+) {
+  const response = await api.get(
+    `/rental-applications/${applicationId}/messages/${messageId}/download`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  const blob = new Blob([response.data]);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName || "documento";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }
 

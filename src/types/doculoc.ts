@@ -286,3 +286,24 @@ export type CreditLedgerEntry = {
   reason: string;
   createdAt: string;
 };
+
+export type RentalApplicationMessage = {
+  id: string;
+  applicationId: string;
+  senderId: string;
+  sender: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  isStaff: boolean;
+  content: string;
+  attachmentKey?: string | null;
+  attachmentFileName?: string | null;
+  attachmentMimeType?: string | null;
+  attachmentSizeBytes?: number | null;
+  readAt?: string | null;
+  createdAt: string;
+};
+

@@ -41,11 +41,17 @@ VITE_API_URL=https://api.doculoc.com.br
   - Componente modal `AssociateSellerDialog` (`associate-seller-dialog.tsx`) para associação rápida.
   - Permite que um mesmo vendedor (`SELLER`) pertença a múltiplas imobiliárias simultaneamente.
 
-- **Consulta Conjunta / Composição de Renda (2 CPFs)**:
+- **Consulta Conjunta / Composição de Renda (Múltiplos Locatários)**:
   - Disponível na tela de Nova Consulta (`NewApplicationPage`).
-  - Permite adicionar um 2º CPF para composição de renda locatícia (consumindo 2 créditos).
-  - Exibição unificada em linha única na listagem com indicador visual de 2 locatários.
+  - Permite adicionar múltiplos CPFs para composição de renda locatícia (consumindo créditos proporcionais à quantidade de locatários).
+  - Exibição unificada em linha única na listagem com indicador visual de múltiplos locatários.
   - No detalhe da consulta (`ApplicationDetailPage`), exibe card de Composição de Renda com soma de rendas, renda individual, percentual de contribuição e destaque da fonte de renda principal, além de alternância dos relatórios completos Órago para administradores.
+
+- **Chat Interno por Consulta com Envio de Documentos (`ApplicationChat`)**:
+  - Disponível no detalhe da consulta (`ApplicationDetailPage`), acessível por imobiliárias, corretores associados e administradores.
+  - Comunicação em tempo real por polling automático (intervalo de 3,5s).
+  - Suporte a envio de mensagens e upload de arquivos/documentos complementares (PDF, imagens PNG/JPG/WEBP, DOCX) com limite de até 15MB por anexo.
+  - Download seguro do documento autenticado com permissão validada pelo backend.
 
 
 

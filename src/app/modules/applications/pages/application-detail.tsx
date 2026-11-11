@@ -53,6 +53,7 @@ import {
 import { getRentalApplication } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
+import { ApplicationChat } from "../components/application-chat";
 import { OragoAnalysisReport } from "../components/orago-analysis-report";
 import {
   CancelSignatureDialog,
@@ -765,6 +766,10 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             </CardContent>
           </Card>
         ) : null}
+
+        <div className="lg:col-span-2">
+          <ApplicationChat applicationId={application.id} isAdmin={isAdmin} />
+        </div>
       </div>
 
       {isAdmin && (application.oragoData || application.tenants?.some((t) => t.oragoData)) ? (
