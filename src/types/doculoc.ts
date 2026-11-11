@@ -118,6 +118,8 @@ export type RentalApplication = {
   contests?: Contest[];
   adminViewedAt?: string | null;
   oragoData?: any;
+  isJointApplication?: boolean;
+  totalPresumedIncome?: number | string | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -133,6 +135,8 @@ export const UNREAD_NOTIFICATIONS_CUTOFF_TIMESTAMP = new Date(
 export function isApplicationUnread(application?: {
   adminViewedAt?: string | null;
   oragoData?: any;
+  isJointApplication?: boolean;
+  totalPresumedIncome?: number | string | null;
   createdAt?: string;
 } | null): boolean {
   if (!application) return false;
@@ -180,6 +184,7 @@ export type ListApplicationsResponse = {
 
 export type CreateApplicationBody = {
   document: string;
+  secondCpf?: string | null;
   rentValue: number;
   condominiumValue: number;
   feesValue: number;
@@ -226,6 +231,13 @@ export type RentalApplicationTenant = {
   document: string;
   email: string;
   phone: string;
+  oragoAnalysisId?: string | null;
+  oragoData?: any;
+  presumedIncome?: number | string | null;
+  incomePercentage?: number | string | null;
+  isPrimaryIncome?: boolean;
+  recommendation?: "RECOMMENDED" | "ATTENTION" | "NOT_RECOMMENDED" | null;
+  decisionReasons?: string | null;
 };
 
 export type ContractTenant = {

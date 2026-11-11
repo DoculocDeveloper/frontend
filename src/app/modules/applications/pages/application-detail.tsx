@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -129,6 +129,8 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
       toast.error(message);
     },
   });
+
+  const [selectedOragoTenantIndex, setSelectedOragoTenantIndex] = useState(0);
 
   const restartSignatureMutation = useMutation({
     mutationFn: () => restartContractSignature(application?.contract?.id ?? ""),
@@ -404,6 +406,90 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
               <DetailItem label="Capacidade mínima" value={formatCurrency(application.housingExpenseMin)} />
               <DetailItem label="Capacidade máxima" value={formatCurrency(application.housingExpenseMax)} />
             </div>
+
+            {application.isJointApplication || (application.tenants && application.tenants.length > 1) ? (
+              <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      Composição de Renda (2 Locatários)
+                    </span>
+                  </div>
+                  {application.totalPresumedIncome ? (
+                    <span className="text-xs text-muted-foreground">
+                      Renda Somada:{" "}
+                      <strong className="text-foreground font-semibold">
+                        {formatCurrency(application.totalPresumedIncome)}
+                      </strong>
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {application.tenants?.map((tenant) => (
+                    <div
+                      key={tenant.id ?? tenant.order}
+                      className="rounded-xl border bg-background/90 p-3 shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          Locatário {tenant.order}
+                        </span>
+                        {tenant.isPrimaryIncome ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0 font-semibold"
+                          >
+                            ★ Principal Fonte de Renda
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {tenant.name || `Locatário ${tenant.order}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDocument(tenant.document, "CPF")}
+                        </p>
+                      </div>
+
+                      <div className="pt-1 border-t border-border/50 space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Renda Presumida:</span>
+                          <span className="font-semibold text-foreground">
+                            {tenant.presumedIncome
+                              ? formatCurrency(tenant.presumedIncome)
+                              : "Não informada"}
+                            {tenant.incomePercentage
+                              ? ` (${Number(tenant.incomePercentage).toFixed(0)}%)`
+                              : ""}
+                          </span>
+                        </div>
+                        {tenant.recommendation ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Recomendação Órago:</span>
+                            <span
+                              className={
+                                tenant.recommendation === "RECOMMENDED"
+                                  ? "text-emerald-600 font-medium"
+                                  : "text-amber-600 font-medium"
+                              }
+                            >
+                              {tenant.recommendation === "RECOMMENDED"
+                                ? "Recomendado"
+                                : "Com Apontamentos"}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <Separator />
             <div>
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -661,12 +747,35 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
         ) : null}
       </div>
 
-      {isAdmin && application.oragoData ? (
-        <div className="mt-5">
-          <OragoAnalysisReport
-            oragoData={application.oragoData}
-            documentType={application.documentType}
-          />
+      {isAdmin && (application.oragoData || application.tenants?.some((t) => t.oragoData)) ? (
+        <div className="mt-5 space-y-4">
+          {application.tenants && application.tenants.filter((t) => t.oragoData).length > 1 ? (
+            <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-2">
+                Relatório Órago do Locatário:
+              </span>
+              {application.tenants.map((tenant, idx) => (
+                <Button
+                  key={tenant.id || idx}
+                  variant={selectedOragoTenantIndex === idx ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedOragoTenantIndex(idx)}
+                  className="text-xs h-8"
+                >
+                  {tenant.order ? `${tenant.order}º Locatário` : `Locatário ${idx + 1}`}
+                  {tenant.name ? `: ${tenant.name.split(" ")[0]}` : ""}
+                  {tenant.isPrimaryIncome ? " (Principal)" : ""}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+
+          {((application.tenants?.[selectedOragoTenantIndex]?.oragoData as any) || application.oragoData) ? (
+            <OragoAnalysisReport
+              oragoData={(application.tenants?.[selectedOragoTenantIndex]?.oragoData as any) || application.oragoData}
+              documentType={application.documentType}
+            />
+          ) : null}
         </div>
       ) : null}
     </PageShell>

@@ -222,6 +222,11 @@ export function ApplicationsTable({
                   <div className="truncate font-medium text-sm text-foreground">
                     {formatDocument(application.document, application.documentType)}
                   </div>
+                  {application.isJointApplication || (application.tenants && application.tenants.length > 1) ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary shrink-0">
+                      2 locatários
+                    </span>
+                  ) : null}
                   {isUnread ? (
                     <span className="inline-flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-red-600 shadow-2xs">
                       <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
