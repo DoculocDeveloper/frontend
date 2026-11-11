@@ -120,6 +120,8 @@ export type RentalApplication = {
   oragoData?: any;
   isJointApplication?: boolean;
   totalPresumedIncome?: number | string | null;
+  unreadMessagesCount?: number;
+  hasUnreadMessages?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -137,6 +139,8 @@ export function isApplicationUnread(application?: {
   oragoData?: any;
   isJointApplication?: boolean;
   totalPresumedIncome?: number | string | null;
+  unreadMessagesCount?: number;
+  hasUnreadMessages?: boolean;
   createdAt?: string;
 } | null): boolean {
   if (!application) return false;

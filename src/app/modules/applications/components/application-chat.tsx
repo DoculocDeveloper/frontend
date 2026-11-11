@@ -411,6 +411,20 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
         </div>
       ) : null}
 
+      {/* Notification banner when closed with unread messages */}
+      {!isOpen && unreadCount > 0 ? (
+        <div
+          onClick={() => setIsOpen(true)}
+          className="mb-2 flex cursor-pointer items-center gap-2 rounded-full border border-rose-300 bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xl transition-all hover:bg-rose-700 animate-pulse"
+        >
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-white" />
+          </span>
+          <span>{unreadCount === 1 ? "Nova mensagem recebida!" : `${unreadCount} novas mensagens!`}</span>
+        </div>
+      ) : null}
+
       {/* Floating Action Button (FAB) */}
       <button
         type="button"
@@ -419,7 +433,9 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
           "relative flex size-14 items-center justify-center rounded-full shadow-xl transition-all duration-200 hover:scale-105 active:scale-95",
           isOpen
             ? "bg-muted text-foreground border border-border shadow-md"
-            : "bg-primary text-primary-foreground hover:bg-primary/95 ring-4 ring-primary/20",
+            : unreadCount > 0
+              ? "bg-rose-600 text-white hover:bg-rose-700 ring-4 ring-rose-400/50 animate-bounce"
+              : "bg-primary text-primary-foreground hover:bg-primary/95 ring-4 ring-primary/20",
         )}
         title={isOpen ? "Fechar chat" : "Abrir chat da consulta"}
       >

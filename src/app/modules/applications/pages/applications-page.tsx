@@ -66,6 +66,7 @@ export function ApplicationsPage({
         page,
         perPage,
       }),
+    refetchInterval: 5000,
   });
 
   function handleStatusChange(value: RentalApplicationStatus | "ALL") {

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useMemo, type ReactNode } from "react";
-import { Eye, Download, FileText, Building2 } from "lucide-react";
+import { Eye, Download, FileText, Building2, MessageSquare } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   type ColumnDef,
@@ -80,6 +80,19 @@ function ApplicationMobileCard({
                 Nova consulta
               </span>
             ) : null}
+            {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold text-sky-800 shadow-2xs animate-pulse">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-sky-600" />
+                </span>
+                <MessageSquare className="size-3 text-sky-700" />
+                Nova mensagem
+                {application.unreadMessagesCount && application.unreadMessagesCount > 1
+                  ? ` (${application.unreadMessagesCount})`
+                  : ""}
+              </span>
+            ) : null}
           </div>
           {application.tenantName ? (
             <p className="truncate text-xs text-muted-foreground">{application.tenantName}</p>
@@ -135,13 +148,30 @@ function ApplicationMobileCard({
             Baixar DOCX
           </Button>
         ) : null}
-        <Button asChild variant="outline" className="w-full sm:w-auto">
+        <Button
+          asChild
+          variant={application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? "default" : "outline"}
+          className={cn(
+            "w-full sm:w-auto",
+            (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
+              "bg-sky-600 hover:bg-sky-700 text-white font-semibold ring-2 ring-sky-400/50 animate-pulse"
+          )}
+        >
           <Link
             to={`${basePath}/consultas/${application.id}`}
             onClick={() => onViewApplication?.(application)}
           >
-            <Eye className="size-4" />
-            Ver detalhes
+            {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+              <>
+                <MessageSquare className="size-4 mr-1.5 animate-bounce" />
+                Ver chat
+              </>
+            ) : (
+              <>
+                <Eye className="size-4" />
+                Ver detalhes
+              </>
+            )}
           </Link>
         </Button>
       </div>
@@ -235,6 +265,19 @@ export function ApplicationsTable({
                       Nova consulta
                     </span>
                   ) : null}
+                  {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold text-sky-800 shadow-2xs animate-pulse">
+                      <span className="relative flex size-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-75" />
+                        <span className="relative inline-flex size-2 rounded-full bg-sky-600" />
+                      </span>
+                      <MessageSquare className="size-3 text-sky-700" />
+                      Nova mensagem
+                      {application.unreadMessagesCount && application.unreadMessagesCount > 1
+                        ? ` (${application.unreadMessagesCount})`
+                        : ""}
+                    </span>
+                  ) : null}
                 </div>
                 <div className="truncate text-xs text-muted-foreground">
                   {application.tenantName || application.documentType}
@@ -319,13 +362,31 @@ export function ApplicationsTable({
                   <Download className="size-4" />
                 </Button>
               ) : null}
-              <Button asChild variant="outline" size="sm" className="h-8 px-2.5 rounded-xl text-xs">
+              <Button
+                asChild
+                variant={application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "h-8 px-2.5 rounded-xl text-xs transition-all",
+                  (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
+                    "bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow-xs animate-pulse ring-2 ring-sky-400/50"
+                )}
+              >
                 <Link
                   to={`${basePath}/consultas/${application.id}`}
                   onClick={() => handleView(application)}
                 >
-                  <Eye className="size-3.5" />
-                  Ver
+                  {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+                    <>
+                      <MessageSquare className="size-3.5 mr-1 animate-bounce" />
+                      Ver chat
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="size-3.5 mr-1" />
+                      Ver
+                    </>
+                  )}
                 </Link>
               </Button>
             </div>

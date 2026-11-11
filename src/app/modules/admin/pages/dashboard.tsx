@@ -26,6 +26,7 @@ export function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-dashboard-applications"],
     queryFn: () => listRentalApplications({ page: 1, perPage: 100 }),
+    refetchInterval: 5000,
   });
 
   const applications = data?.applications ?? [];
