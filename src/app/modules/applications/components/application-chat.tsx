@@ -10,10 +10,10 @@ import {
   MessageSquare,
   X,
   File,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +54,7 @@ function getFileIcon(mimeType?: string | null) {
 export function ApplicationChat({ applicationId }: ApplicationChatProps) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -68,15 +69,19 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
     staleTime: 1000,
   });
 
+  const unreadCount = messages.filter(
+    (m) => m.senderId !== session?.user?.id && !m.readAt,
+  ).length;
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (isOpen && messages.length > 0) {
       scrollToBottom();
     }
-  }, [messages.length]);
+  }, [messages.length, isOpen]);
 
   const sendMutation = useMutation({
     mutationFn: (data: { content?: string; file?: File }) =>
@@ -152,227 +157,289 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
   };
 
   return (
-    <Card className="flashlight-card bg-white/90 shadow-sm border border-border/80 flex flex-col overflow-hidden">
-      <CardHeader className="border-b border-border/50 pb-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-primary/20 bg-primary/10 p-2 text-primary">
-              <MessageSquare className="size-4" />
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+      {/* Floating Chat Window */}
+      {isOpen ? (
+        <div className="mb-3 flex h-[540px] max-h-[calc(100vh-6rem)] w-[360px] sm:w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border/80 bg-background shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-5 duration-200">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border/60 bg-primary px-4 py-3 text-primary-foreground shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-white/15 text-white">
+                <MessageSquare className="size-4.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold truncate leading-tight">
+                    Chat da Consulta
+                  </h3>
+                  {messages.length > 0 ? (
+                    <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[10px] font-bold">
+                      {messages.length}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-[11px] text-primary-foreground/80 truncate">
+                  Imobiliária & Administrador
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                Chat & Documentos
-                {messages.length > 0 ? (
-                  <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-semibold">
-                    {messages.length}
-                  </Badge>
-                ) : null}
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Comunicação direta entre Imobiliária e Administrador para esta consulta.
-              </p>
+
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="size-8 rounded-lg text-primary-foreground/90 hover:bg-white/20 hover:text-white"
+                title="Minimizar chat"
+              >
+                <ChevronDown className="size-5" />
+              </Button>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/60">
-            Anexos até 15MB (PDF, Imagens, DOCX)
-          </Badge>
-        </div>
-      </CardHeader>
 
-      <CardContent className="p-4 flex flex-col flex-1">
-        {/* Messages Feed */}
-        <div className="min-h-[220px] max-h-[380px] overflow-y-auto space-y-3 pr-1 py-1">
-          {isLoading && messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground space-y-2">
-              <Loader2 className="size-6 animate-spin text-primary" />
-              <p className="text-xs">Carregando histórico do chat...</p>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground space-y-1">
-              <MessageSquare className="size-8 opacity-40 mb-1" />
-              <p className="text-sm font-medium text-foreground">Nenhuma mensagem ainda.</p>
-              <p className="text-xs max-w-sm">
-                Utilize o chat para enviar dúvidas, solicitar ou anexar comprovantes de renda, holerites ou documentos complementares.
-              </p>
-            </div>
-          ) : (
-            messages.map((message) => {
-              const isMe = message.senderId === session?.user?.id;
+          {/* Subheader aviso de anexos */}
+          <div className="flex items-center justify-between bg-muted/50 px-3.5 py-1.5 border-b border-border/40 text-[11px] text-muted-foreground">
+            <span>Anexos até 15MB</span>
+            <span className="text-[10px] font-mono">PDF • Imagens • DOCX</span>
+          </div>
 
-              return (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex flex-col max-w-[85%] sm:max-w-[75%]",
-                    isMe ? "ml-auto items-end" : "mr-auto items-start",
-                  )}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 px-1">
-                    <span className="text-[11px] font-semibold text-foreground/80 truncate max-w-[140px]">
-                      {isMe ? "Você" : message.sender?.name || "Usuário"}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-[9px] px-1 py-0 h-4 font-semibold uppercase tracking-wider",
-                        message.isStaff
-                          ? "bg-blue-100 text-blue-900 border border-blue-200"
-                          : "bg-emerald-100 text-emerald-900 border border-emerald-200",
-                      )}
-                    >
-                      {message.isStaff ? "Doculoc" : "Imobiliária"}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      {formatDate(message.createdAt)}
-                    </span>
-                  </div>
+          {/* Messages Feed */}
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 p-3.5">
+            {isLoading && messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center py-12 text-muted-foreground space-y-2">
+                <Loader2 className="size-6 animate-spin text-primary" />
+                <p className="text-xs">Carregando mensagens...</p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center py-10 text-center text-muted-foreground space-y-2 px-4">
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <MessageSquare className="size-6" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">
+                  Nenhuma mensagem ainda
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Envie mensagens, solicite documentos ou anexe comprovantes e holerites complementares.
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => {
+                const isMe = message.senderId === session?.user?.id;
 
+                return (
                   <div
+                    key={message.id}
                     className={cn(
-                      "rounded-2xl p-3 shadow-2xs space-y-2 text-sm",
-                      isMe
-                        ? "bg-primary text-primary-foreground rounded-tr-xs"
-                        : "bg-muted/70 text-foreground border border-border/60 rounded-tl-xs",
+                      "flex flex-col max-w-[85%]",
+                      isMe ? "ml-auto items-end" : "mr-auto items-start",
                     )}
                   >
-                    {message.content ? (
-                      <p className="whitespace-pre-wrap break-words leading-relaxed text-xs sm:text-sm">
-                        {message.content}
-                      </p>
-                    ) : null}
-
-                    {message.attachmentKey ? (
-                      <div
+                    <div className="flex items-center gap-1.5 mb-1 px-1">
+                      <span className="text-[11px] font-semibold text-foreground/80 truncate max-w-[130px]">
+                        {isMe ? "Você" : message.sender?.name || "Usuário"}
+                      </span>
+                      <Badge
+                        variant="secondary"
                         className={cn(
-                          "rounded-xl p-2.5 flex items-center justify-between gap-3 border transition-colors",
-                          isMe
-                            ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground"
-                            : "bg-background border-border/80 text-foreground",
+                          "text-[9px] px-1 py-0 h-4 font-semibold uppercase tracking-wider",
+                          message.isStaff
+                            ? "bg-blue-100 text-blue-900 border border-blue-200"
+                            : "bg-emerald-100 text-emerald-900 border border-emerald-200",
                         )}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="p-1.5 rounded-lg bg-background/80 shadow-2xs shrink-0">
-                            {getFileIcon(message.attachmentMimeType)}
-                          </div>
-                          <div className="min-w-0 text-left">
-                            <p
-                              className="text-xs font-semibold truncate max-w-[160px] sm:max-w-[200px]"
-                              title={message.attachmentFileName || "anexo"}
-                            >
-                              {message.attachmentFileName || "Arquivo anexado"}
-                            </p>
-                            <span className="text-[10px] opacity-75">
-                              {formatBytes(message.attachmentSizeBytes)}
-                            </span>
-                          </div>
-                        </div>
+                        {message.isStaff ? "Doculoc" : "Imobiliária"}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDate(message.createdAt)}
+                      </span>
+                    </div>
 
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={downloadingId === message.id}
-                          onClick={() => handleDownload(message)}
+                    <div
+                      className={cn(
+                        "rounded-2xl p-3 shadow-2xs space-y-2 text-sm",
+                        isMe
+                          ? "bg-primary text-primary-foreground rounded-tr-xs"
+                          : "bg-muted/70 text-foreground border border-border/60 rounded-tl-xs",
+                      )}
+                    >
+                      {message.content ? (
+                        <p className="whitespace-pre-wrap break-words leading-relaxed text-xs sm:text-sm">
+                          {message.content}
+                        </p>
+                      ) : null}
+
+                      {message.attachmentKey ? (
+                        <div
                           className={cn(
-                            "size-7 shrink-0 rounded-lg hover:bg-black/10",
-                            isMe ? "text-primary-foreground hover:text-white" : "text-foreground",
+                            "rounded-xl p-2.5 flex items-center justify-between gap-3 border transition-colors",
+                            isMe
+                              ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground"
+                              : "bg-background border-border/80 text-foreground",
                           )}
-                          title="Baixar documento"
                         >
-                          {downloadingId === message.id ? (
-                            <Loader2 className="size-3.5 animate-spin" />
-                          ) : (
-                            <Download className="size-3.5" />
-                          )}
-                        </Button>
-                      </div>
-                    ) : null}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="p-1.5 rounded-lg bg-background/80 shadow-2xs shrink-0">
+                              {getFileIcon(message.attachmentMimeType)}
+                            </div>
+                            <div className="min-w-0 text-left">
+                              <p
+                                className="text-xs font-semibold truncate max-w-[150px] sm:max-w-[180px]"
+                                title={message.attachmentFileName || "anexo"}
+                              >
+                                {message.attachmentFileName || "Arquivo anexado"}
+                              </p>
+                              <span className="text-[10px] opacity-75">
+                                {formatBytes(message.attachmentSizeBytes)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={downloadingId === message.id}
+                            onClick={() => handleDownload(message)}
+                            className={cn(
+                              "size-7 shrink-0 rounded-lg hover:bg-black/10",
+                              isMe
+                                ? "text-primary-foreground hover:text-white"
+                                : "text-foreground",
+                            )}
+                            title="Baixar documento"
+                          >
+                            {downloadingId === message.id ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Download className="size-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Selected file preview */}
-        {selectedFile ? (
-          <div className="mt-3 flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <Paperclip className="size-3.5 text-primary shrink-0" />
-              <span className="font-semibold text-foreground truncate max-w-[220px]">
-                {selectedFile.name}
-              </span>
-              <span className="text-muted-foreground text-[10px] shrink-0">
-                ({formatBytes(selectedFile.size)})
-              </span>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setSelectedFile(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-              className="size-6 text-muted-foreground hover:text-destructive"
-              title="Remover anexo"
-            >
-              <X className="size-3" />
-            </Button>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
           </div>
-        ) : null}
 
-        {/* Input Bar */}
-        <form onSubmit={handleSend} className="mt-3 flex items-end gap-2 pt-2 border-t border-border/50">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,application/pdf,image/*,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          {/* Selected file preview */}
+          {selectedFile ? (
+            <div className="mx-3 mb-2 flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <Paperclip className="size-3.5 text-primary shrink-0" />
+                <span className="font-semibold text-foreground truncate max-w-[200px]">
+                  {selectedFile.name}
+                </span>
+                <span className="text-muted-foreground text-[10px] shrink-0">
+                  ({formatBytes(selectedFile.size)})
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="size-6 text-muted-foreground hover:text-destructive"
+                title="Remover anexo"
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          ) : null}
 
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={sendMutation.isPending}
-            className={cn(
-              "size-10 rounded-xl shrink-0 transition-colors",
-              selectedFile ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground",
-            )}
-            title="Anexar documento (PDF, imagem ou DOCX)"
-          >
-            <Paperclip className="size-4" />
-          </Button>
+          {/* Input Bar */}
+          <div className="border-t border-border/60 bg-background p-3">
+            <form onSubmit={handleSend} className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,application/pdf,image/*,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleFileChange}
+                className="hidden"
+              />
 
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Digite uma mensagem... (Enter para enviar)"
-            disabled={sendMutation.isPending}
-            className="min-h-[40px] max-h-[110px] rounded-xl text-xs sm:text-sm resize-none py-2.5 px-3"
-            rows={1}
-          />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sendMutation.isPending}
+                className={cn(
+                  "size-10 rounded-xl shrink-0 transition-colors",
+                  selectedFile
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "text-muted-foreground",
+                )}
+                title="Anexar documento (PDF, imagem ou DOCX)"
+              >
+                <Paperclip className="size-4" />
+              </Button>
 
-          <Button
-            type="submit"
-            size="icon"
-            disabled={sendMutation.isPending || (!content.trim() && !selectedFile)}
-            className="size-10 rounded-xl shrink-0 gap-1"
-            title="Enviar mensagem"
-          >
-            {sendMutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Send className="size-4" />
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite uma mensagem... (Enter para enviar)"
+                disabled={sendMutation.isPending}
+                className="min-h-[40px] max-h-[100px] rounded-xl text-xs resize-none py-2.5 px-3"
+                rows={1}
+              />
+
+              <Button
+                type="submit"
+                size="icon"
+                disabled={
+                  sendMutation.isPending || (!content.trim() && !selectedFile)
+                }
+                className="size-10 rounded-xl shrink-0 gap-1"
+                title="Enviar mensagem"
+              >
+                {sendMutation.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+              </Button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Floating Action Button (FAB) */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={cn(
+          "relative flex size-14 items-center justify-center rounded-full shadow-xl transition-all duration-200 hover:scale-105 active:scale-95",
+          isOpen
+            ? "bg-muted text-foreground border border-border shadow-md"
+            : "bg-primary text-primary-foreground hover:bg-primary/95 ring-4 ring-primary/20",
+        )}
+        title={isOpen ? "Fechar chat" : "Abrir chat da consulta"}
+      >
+        {isOpen ? (
+          <X className="size-6" />
+        ) : (
+          <>
+            <MessageSquare className="size-6" />
+            {unreadCount > 0 ? (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 text-[11px] font-bold text-white shadow-sm animate-pulse">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            ) : messages.length > 0 ? (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/90 border-2 border-background px-1 text-[10px] font-semibold text-primary-foreground">
+                {messages.length}
+              </span>
+            ) : null}
+          </>
+        )}
+      </button>
+    </div>
   );
 }

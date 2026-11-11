@@ -766,10 +766,6 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             </CardContent>
           </Card>
         ) : null}
-
-        <div className="lg:col-span-2">
-          <ApplicationChat applicationId={application.id} isAdmin={isAdmin} />
-        </div>
       </div>
 
       {isAdmin && (application.oragoData || application.tenants?.some((t) => t.oragoData)) ? (
@@ -803,6 +799,9 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
           ) : null}
         </div>
       ) : null}
+
+      {/* Botão e Janela Flutuante do Chat da Consulta */}
+      <ApplicationChat applicationId={application.id} isAdmin={isAdmin} />
     </PageShell>
   );
 }
