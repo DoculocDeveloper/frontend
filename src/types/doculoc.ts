@@ -185,6 +185,7 @@ export type ListApplicationsResponse = {
 export type CreateApplicationBody = {
   document: string;
   secondCpf?: string | null;
+  additionalCpfs?: string[];
   rentValue: number;
   condominiumValue: number;
   feesValue: number;

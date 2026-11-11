@@ -413,7 +413,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   <div className="flex items-center gap-2">
                     <Users className="size-4 text-primary" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                      Composição de Renda (2 Locatários)
+                      Composição de Renda ({application.tenants?.length ?? 2} Locatários)
                     </span>
                   </div>
                   {application.totalPresumedIncome ? (
@@ -426,7 +426,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {application.tenants?.map((tenant) => (
                     <div
                       key={tenant.id ?? tenant.order}

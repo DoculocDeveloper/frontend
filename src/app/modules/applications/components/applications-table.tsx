@@ -224,7 +224,9 @@ export function ApplicationsTable({
                   </div>
                   {application.isJointApplication || (application.tenants && application.tenants.length > 1) ? (
                     <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary shrink-0">
-                      2 locatários
+                      {application.tenants && application.tenants.length > 1
+                        ? `${application.tenants.length} locatários`
+                        : "Composição"}
                     </span>
                   ) : null}
                   {isUnread ? (

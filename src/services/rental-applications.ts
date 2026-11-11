@@ -130,11 +130,21 @@ export async function createCpfApplication(body: CreateApplicationBody) {
       ? onlyDigits(body.secondCpf)
       : undefined;
 
+  const cleanAdditionalCpfs = body.additionalCpfs
+    ? body.additionalCpfs
+        .map(onlyDigits)
+        .filter((cpf) => cpf.length === 11)
+    : undefined;
+
   const response = await api.post<CreateApplicationInitialResponse>(
     "/rental-applications/cpf",
     {
       cpf: onlyDigits(body.document),
       secondCpf: cleanSecondCpf,
+      additionalCpfs:
+        cleanAdditionalCpfs && cleanAdditionalCpfs.length > 0
+          ? cleanAdditionalCpfs
+          : undefined,
       rentValue: body.rentValue,
       condominiumValue: body.condominiumValue,
       feesValue: body.feesValue,
