@@ -81,12 +81,12 @@ function ApplicationMobileCard({
               </span>
             ) : null}
             {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold text-sky-800 shadow-2xs animate-pulse">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-bold text-red-700 shadow-2xs animate-pulse">
                 <span className="relative flex size-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-sky-600" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-red-600" />
                 </span>
-                <MessageSquare className="size-3 text-sky-700" />
+                <MessageSquare className="size-3 text-red-600" />
                 Nova mensagem
                 {application.unreadMessagesCount && application.unreadMessagesCount > 1
                   ? ` (${application.unreadMessagesCount})`
@@ -154,7 +154,7 @@ function ApplicationMobileCard({
           className={cn(
             "w-full sm:w-auto",
             (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
-              "bg-sky-600 hover:bg-sky-700 text-white font-semibold ring-2 ring-sky-400/50 animate-pulse"
+              "bg-red-600 hover:bg-red-700 text-white font-semibold ring-2 ring-red-400/50 animate-pulse"
           )}
         >
           <Link
@@ -266,12 +266,12 @@ export function ApplicationsTable({
                     </span>
                   ) : null}
                   {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/40 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold text-sky-800 shadow-2xs animate-pulse">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2.5 py-0.5 text-[10px] font-bold text-red-700 shadow-2xs animate-pulse">
                       <span className="relative flex size-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-75" />
-                        <span className="relative inline-flex size-2 rounded-full bg-sky-600" />
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                        <span className="relative inline-flex size-2 rounded-full bg-red-600" />
                       </span>
-                      <MessageSquare className="size-3 text-sky-700" />
+                      <MessageSquare className="size-3 text-red-600" />
                       Nova mensagem
                       {application.unreadMessagesCount && application.unreadMessagesCount > 1
                         ? ` (${application.unreadMessagesCount})`
@@ -369,7 +369,7 @@ export function ApplicationsTable({
                 className={cn(
                   "h-8 px-2.5 rounded-xl text-xs transition-all",
                   (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
-                    "bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow-xs animate-pulse ring-2 ring-sky-400/50"
+                    "bg-red-600 hover:bg-red-700 text-white font-semibold shadow-xs animate-pulse ring-2 ring-red-400/50"
                 )}
               >
                 <Link
