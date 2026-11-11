@@ -800,8 +800,10 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
         </div>
       ) : null}
 
-      {/* Botão e Janela Flutuante do Chat da Consulta */}
-      <ApplicationChat applicationId={application.id} isAdmin={isAdmin} />
+      {/* Botão e Janela Flutuante do Chat da Consulta (exclusivo Admin e Imobiliária) */}
+      {!isSeller ? (
+        <ApplicationChat applicationId={application.id} isAdmin={isAdmin} />
+      ) : null}
     </PageShell>
   );
 }

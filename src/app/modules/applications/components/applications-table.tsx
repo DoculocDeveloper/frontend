@@ -22,6 +22,8 @@ import { formatCurrency, formatDate, formatDocument } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { type RentalApplication, isApplicationUnread } from "@/types/doculoc";
 import { markApplicationAsViewed } from "@/services/rental-applications";
+import { useAuth } from "@/hooks/use-auth";
+import { normalizeRole } from "@/types/auth";
 import { ApplicationStatusBadge } from "./application-status-badge";
 
 function MobileInfo({ label, value }: { label: string; value: ReactNode }) {
@@ -55,6 +57,9 @@ function ApplicationMobileCard({
   const requester = application.requester;
   const requesterName = requester?.realEstateProfile?.name ?? requester?.name ?? "-";
   const isUnread = isAdmin && isApplicationUnread(application);
+  const { session } = useAuth();
+  const isSeller = normalizeRole(session?.user?.role) === "SELLER";
+  const hasUnreadChat = !isSeller && (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0);
 
   return (
     <article className="rounded-3xl border bg-white/85 p-4 shadow-sm backdrop-blur">
@@ -80,7 +85,7 @@ function ApplicationMobileCard({
                 Nova consulta
               </span>
             ) : null}
-            {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+            {hasUnreadChat ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-bold text-red-700 shadow-2xs animate-pulse">
                 <span className="relative flex size-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -150,10 +155,10 @@ function ApplicationMobileCard({
         ) : null}
         <Button
           asChild
-          variant={application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? "default" : "outline"}
+          variant={hasUnreadChat ? "default" : "outline"}
           className={cn(
             "w-full sm:w-auto",
-            (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
+            hasUnreadChat &&
               "bg-red-600 hover:bg-red-700 text-white font-semibold ring-2 ring-red-400/50 animate-pulse"
           )}
         >
@@ -161,7 +166,7 @@ function ApplicationMobileCard({
             to={`${basePath}/consultas/${application.id}`}
             onClick={() => onViewApplication?.(application)}
           >
-            {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+            {hasUnreadChat ? (
               <>
                 <MessageSquare className="size-4 mr-1.5 animate-bounce" />
                 Ver chat
@@ -193,6 +198,8 @@ export function ApplicationsTable({
   onDownloadSignedContract?: (application: RentalApplication) => void;
 }) {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const isSeller = normalizeRole(session?.user?.role) === "SELLER";
 
   const handleView = (application: RentalApplication) => {
     if (isAdmin && isApplicationUnread(application)) {
@@ -234,6 +241,10 @@ export function ApplicationsTable({
         cell: ({ row }) => {
           const application = row.original;
           const isUnread = isAdmin && isApplicationUnread(application);
+          const hasUnreadChat =
+            !isSeller &&
+            (application.hasUnreadMessages ||
+              (application.unreadMessagesCount ?? 0) > 0);
 
           return (
             <div className="flex min-w-0 items-center gap-2.5">
@@ -265,7 +276,7 @@ export function ApplicationsTable({
                       Nova consulta
                     </span>
                   ) : null}
-                  {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+                  {hasUnreadChat ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2.5 py-0.5 text-[10px] font-bold text-red-700 shadow-2xs animate-pulse">
                       <span className="relative flex size-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -336,6 +347,10 @@ export function ApplicationsTable({
           const application = row.original;
           const hasContract = application.status === "CONTRACT_GENERATED" && application.contract?.id;
           const isSigned = application.contract?.signatureStatus === "SIGNED";
+          const hasUnreadChat =
+            !isSeller &&
+            (application.hasUnreadMessages ||
+              (application.unreadMessagesCount ?? 0) > 0);
 
           return (
             <div className="flex items-center justify-end gap-1.5 whitespace-nowrap pr-4">
@@ -364,11 +379,11 @@ export function ApplicationsTable({
               ) : null}
               <Button
                 asChild
-                variant={application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? "default" : "outline"}
+                variant={hasUnreadChat ? "default" : "outline"}
                 size="sm"
                 className={cn(
                   "h-8 px-2.5 rounded-xl text-xs transition-all",
-                  (application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0) &&
+                  hasUnreadChat &&
                     "bg-red-600 hover:bg-red-700 text-white font-semibold shadow-xs animate-pulse ring-2 ring-red-400/50"
                 )}
               >
@@ -376,7 +391,7 @@ export function ApplicationsTable({
                   to={`${basePath}/consultas/${application.id}`}
                   onClick={() => handleView(application)}
                 >
-                  {application.hasUnreadMessages || (application.unreadMessagesCount ?? 0) > 0 ? (
+                  {hasUnreadChat ? (
                     <>
                       <MessageSquare className="size-3.5 mr-1 animate-bounce" />
                       Ver chat
@@ -419,7 +434,7 @@ export function ApplicationsTable({
     });
 
     return baseColumns;
-  }, [basePath, isAdmin, onDownloadContract, onDownloadSignedContract]);
+  }, [basePath, isAdmin, isSeller, onDownloadContract, onDownloadSignedContract]);
 
   const table = useReactTable({
     data: applications,
