@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState, PageHeader, PageShell } from "@/app/modules/_components/page-shell";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { normalizeRole } from "@/types/auth";
 import {
@@ -408,81 +409,100 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
             </div>
 
             {application.isJointApplication || (application.tenants && application.tenants.length > 1) ? (
-              <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="space-y-3.5 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary/10 pb-3">
                   <div className="flex items-center gap-2">
-                    <Users className="size-4 text-primary" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                    <Users className="size-4 text-primary shrink-0" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
                       Composição de Renda ({application.tenants?.length ?? 2} Locatários)
                     </span>
                   </div>
                   {application.totalPresumedIncome ? (
-                    <span className="text-xs text-muted-foreground">
-                      Renda Somada:{" "}
+                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-background/80 px-2.5 py-1 text-xs border border-border/60">
+                      <span className="text-muted-foreground">Renda Somada:</span>
                       <strong className="text-foreground font-semibold">
                         {formatCurrency(application.totalPresumedIncome)}
                       </strong>
-                    </span>
+                    </div>
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
                   {application.tenants?.map((tenant) => (
                     <div
                       key={tenant.id ?? tenant.order}
-                      className="rounded-xl border bg-background/90 p-3 shadow-xs space-y-2"
+                      className="rounded-xl border border-border/80 bg-background p-3.5 shadow-2xs space-y-3"
                     >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-semibold text-muted-foreground">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2">
+                        <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
                           Locatário {tenant.order}
                         </span>
                         {tenant.isPrimaryIncome ? (
                           <Badge
                             variant="secondary"
-                            className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0 font-semibold"
+                            className="bg-amber-50 text-amber-800 border border-amber-300 text-[10px] px-2 py-0.5 font-semibold whitespace-nowrap shrink-0 shadow-2xs"
                           >
                             ★ Principal Fonte de Renda
                           </Badge>
                         ) : null}
                       </div>
 
-                      <div>
-                        <p className="text-sm font-semibold text-foreground truncate">
+                      <div className="space-y-0.5">
+                        <p
+                          className="text-sm font-semibold text-foreground truncate"
+                          title={tenant.name || `Locatário ${tenant.order}`}
+                        >
                           {tenant.name || `Locatário ${tenant.order}`}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs font-mono text-muted-foreground">
                           {formatDocument(tenant.document, "CPF")}
                         </p>
                       </div>
 
-                      <div className="pt-1 border-t border-border/50 space-y-1 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Renda Presumida:</span>
-                          <span className="font-semibold text-foreground">
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
+                        <div className="rounded-lg bg-muted/40 p-2 space-y-0.5 min-w-0">
+                          <span className="text-[11px] font-medium text-muted-foreground block whitespace-nowrap">
+                            Renda Estimada
+                          </span>
+                          <span className="text-xs font-bold text-foreground block truncate">
                             {tenant.presumedIncome
                               ? formatCurrency(tenant.presumedIncome)
                               : "Não informada"}
-                            {tenant.incomePercentage
-                              ? ` (${Number(tenant.incomePercentage).toFixed(0)}%)`
-                              : ""}
+                            {tenant.incomePercentage ? (
+                              <span className="ml-1 text-[11px] font-normal text-muted-foreground">
+                                ({Number(tenant.incomePercentage).toFixed(0)}%)
+                              </span>
+                            ) : null}
                           </span>
                         </div>
-                        {tenant.recommendation ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Recomendação Órago:</span>
+
+                        <div className="rounded-lg bg-muted/40 p-2 space-y-0.5 min-w-0">
+                          <span className="text-[11px] font-medium text-muted-foreground block whitespace-nowrap">
+                            Órago
+                          </span>
+                          <span
+                            className={cn(
+                              "text-xs font-semibold inline-flex items-center gap-1.5 truncate",
+                              tenant.recommendation === "RECOMMENDED"
+                                ? "text-emerald-700"
+                                : "text-amber-700",
+                            )}
+                          >
                             <span
-                              className={
+                              className={cn(
+                                "size-1.5 rounded-full shrink-0",
                                 tenant.recommendation === "RECOMMENDED"
-                                  ? "text-emerald-600 font-medium"
-                                  : "text-amber-600 font-medium"
-                              }
-                            >
+                                  ? "bg-emerald-600"
+                                  : "bg-amber-600",
+                              )}
+                            />
+                            <span className="truncate">
                               {tenant.recommendation === "RECOMMENDED"
                                 ? "Recomendado"
                                 : "Com Apontamentos"}
                             </span>
-                          </div>
-                        ) : null}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
