@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,9 +8,11 @@ import {
   Building2,
   FileText,
   Loader2,
+  Plus,
   Send,
   ShieldCheck,
   UserRound,
+  Users,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -39,6 +42,7 @@ const newApplicationSchema = z
   .object({
     documentType: z.enum(["CPF", "CNPJ"]),
     document: z.string().min(11, "Informe um CPF ou CNPJ válido."),
+    secondCpf: z.string().optional(),
     rentValue: z
       .union([z.string(), z.number()])
       .transform(parseCurrency)
@@ -70,6 +74,23 @@ const newApplicationSchema = z
         message: "CNPJ deve conter 14 dígitos.",
       });
     }
+
+    if (data.secondCpf && data.secondCpf.trim() !== "") {
+      const secondLength = onlyDigits(data.secondCpf).length;
+      if (secondLength !== 11) {
+        context.addIssue({
+          code: "custom",
+          path: ["secondCpf"],
+          message: "O 2º CPF deve conter 11 dígitos.",
+        });
+      } else if (onlyDigits(data.secondCpf) === onlyDigits(data.document)) {
+        context.addIssue({
+          code: "custom",
+          path: ["secondCpf"],
+          message: "O 2º CPF não pode ser igual ao 1º CPF.",
+        });
+      }
+    }
   });
 
 type NewApplicationInput = z.input<typeof newApplicationSchema>;
@@ -82,11 +103,14 @@ function FieldError({ message }: { message?: string }) {
 export function NewApplicationPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [hasSecondTenant, setHasSecondTenant] = useState(false);
+
   const form = useForm<NewApplicationInput, any, NewApplicationOutput>({
     resolver: zodResolver(newApplicationSchema),
     defaultValues: {
       documentType: "CPF",
       document: "",
+      secondCpf: "",
       rentValue: "",
       condominiumValue: "0,00",
       feesValue: "0,00",
@@ -103,6 +127,10 @@ export function NewApplicationPage() {
     mutationFn: (values: NewApplicationOutput) => {
       const body: CreateApplicationBody = {
         document: values.document,
+        secondCpf:
+          values.documentType === "CPF" && hasSecondTenant && values.secondCpf
+            ? values.secondCpf
+            : undefined,
         rentValue: values.rentValue,
         condominiumValue: values.condominiumValue,
         feesValue: values.feesValue,
@@ -164,6 +192,8 @@ export function NewApplicationPage() {
   function handleDocumentTypeChange(value: string) {
     form.setValue("documentType", value as DocumentType);
     form.setValue("document", "");
+    form.setValue("secondCpf", "");
+    setHasSecondTenant(false);
   }
 
   function handleSubmit(values: NewApplicationOutput) {
@@ -249,6 +279,78 @@ export function NewApplicationPage() {
                   />
                 </div>
                 <FieldError message={form.formState.errors.document?.message} />
+
+                {documentType === "CPF" ? (
+                  <div className="pt-2">
+                    {!hasSecondTenant ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setHasSecondTenant(true);
+                        }}
+                        className="rounded-xl border-dashed border-primary/40 text-primary hover:bg-primary/5 text-xs h-9 gap-1.5"
+                      >
+                        <Plus className="size-3.5" />
+                        Adicionar 2º CPF (Composição de Renda)
+                      </Button>
+                    ) : (
+                      <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Users className="size-4 text-primary" />
+                            <Label
+                              htmlFor="secondCpf"
+                              className="text-xs font-semibold text-primary uppercase tracking-wide"
+                            >
+                              Locatário 2 (Composição de Renda)
+                            </Label>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setHasSecondTenant(false);
+                              form.setValue("secondCpf", "");
+                              form.clearErrors("secondCpf");
+                            }}
+                            className="h-7 text-xs text-muted-foreground hover:text-destructive px-2"
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            <UserRound className="size-4" />
+                          </span>
+                          <Input
+                            id="secondCpf"
+                            type="text"
+                            placeholder="000.000.000-00"
+                            className="h-12 rounded-2xl pl-10 bg-background"
+                            {...form.register("secondCpf", {
+                              onChange: (e) => {
+                                const formatted = formatDocument(
+                                  e.target.value,
+                                  "CPF",
+                                );
+                                form.setValue("secondCpf", formatted);
+                              },
+                            })}
+                          />
+                        </div>
+                        <FieldError
+                          message={form.formState.errors.secondCpf?.message}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          A renda presumida dos dois locatários será somada para aprovação do aluguel. Esta consulta consumirá <strong>2 créditos</strong>.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -338,9 +440,9 @@ export function NewApplicationPage() {
                 <ShieldCheck className="size-4" />
                 <AlertTitle>Consumo de crédito</AlertTitle>
                 <AlertDescription>
-                  Cada consulta consome 1 crédito. A análise pode levar alguns
-                  minutos enquanto a Órago processa os dados. Mantenha esta tela
-                  aberta até o resultado.
+                  {hasSecondTenant
+                    ? "Esta consulta com Composição de Renda consumirá 2 créditos da sua cota de análises Órago."
+                    : "Cada consulta consome 1 crédito. A análise pode levar alguns minutos enquanto a Órago processa os dados."}
                 </AlertDescription>
               </Alert>
 
@@ -370,16 +472,25 @@ export function NewApplicationPage() {
         <div className="grid gap-5">
           <Card className="bg-stone-950 text-white shadow-2xl">
             <CardHeader>
-              <Badge className="w-fit bg-white/10 text-white hover:bg-white/10">
-                Resumo
-              </Badge>
+              <div className="flex items-center justify-between">
+                <Badge className="w-fit bg-white/10 text-white hover:bg-white/10">
+                  Resumo
+                </Badge>
+                {hasSecondTenant ? (
+                  <Badge variant="secondary" className="bg-primary/20 text-primary-foreground border-0 text-[10px]">
+                    2 Locatários (2 Créditos)
+                  </Badge>
+                ) : null}
+              </div>
               <CardTitle className="text-2xl text-white">
                 Pacote locatício
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5 my-auto">
               <div className="rounded-3xl border border-white/10 bg-white/10 p-5">
-                <p className="text-sm text-white/60">Valor analisado</p>
+                <p className="text-sm text-white/60">
+                  {hasSecondTenant ? "Valor analisado (Composição)" : "Valor analisado"}
+                </p>
                 <strong className="mt-2 block wrap-break-word text-3xl font-semibold tracking-tight sm:text-4xl">
                   {formatCurrency(requestedExpense)}
                 </strong>

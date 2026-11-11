@@ -41,6 +41,12 @@ VITE_API_URL=https://api.doculoc.com.br
   - Componente modal `AssociateSellerDialog` (`associate-seller-dialog.tsx`) para associação rápida.
   - Permite que um mesmo vendedor (`SELLER`) pertença a múltiplas imobiliárias simultaneamente.
 
+- **Consulta Conjunta / Composição de Renda (2 CPFs)**:
+  - Disponível na tela de Nova Consulta (`NewApplicationPage`).
+  - Permite adicionar um 2º CPF para composição de renda locatícia (consumindo 2 créditos).
+  - Exibição unificada em linha única na listagem com indicador visual de 2 locatários.
+  - No detalhe da consulta (`ApplicationDetailPage`), exibe card de Composição de Renda com soma de rendas, renda individual, percentual de contribuição e destaque da fonte de renda principal, além de alternância dos relatórios completos Órago para administradores.
+
 
 
 ## Expanding the ESLint configuration
