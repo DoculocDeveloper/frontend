@@ -197,6 +197,16 @@ export function NewApplicationPage() {
   }
 
   function handleSubmit(values: NewApplicationOutput) {
+    if (hasSecondTenant && values.documentType === "CPF") {
+      const secondDigits = onlyDigits(values.secondCpf ?? "");
+      if (secondDigits.length !== 11) {
+        form.setError("secondCpf", {
+          type: "manual",
+          message: "Informe o CPF completo do 2º locatário (11 dígitos).",
+        });
+        return;
+      }
+    }
     mutation.mutate(values);
   }
 

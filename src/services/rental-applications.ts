@@ -125,10 +125,16 @@ export async function getRentalApplication(applicationId: string) {
 }
 
 export async function createCpfApplication(body: CreateApplicationBody) {
+  const cleanSecondCpf =
+    body.secondCpf && onlyDigits(body.secondCpf).length === 11
+      ? onlyDigits(body.secondCpf)
+      : undefined;
+
   const response = await api.post<CreateApplicationInitialResponse>(
     "/rental-applications/cpf",
     {
       cpf: onlyDigits(body.document),
+      secondCpf: cleanSecondCpf,
       rentValue: body.rentValue,
       condominiumValue: body.condominiumValue,
       feesValue: body.feesValue,
