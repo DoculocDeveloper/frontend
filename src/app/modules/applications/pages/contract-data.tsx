@@ -117,20 +117,20 @@ export function ContractDataPage() {
     const initialTenants =
       application.tenants && application.tenants.length > 0
         ? application.tenants.map((t) => ({
-            name: t.name ?? "",
-            document: t.document ?? "",
-            email: t.email ?? "",
-            phone: t.phone ?? "",
-          }))
+          name: t.name ?? "",
+          document: t.document ?? "",
+          email: t.email ?? "",
+          phone: t.phone ?? "",
+        }))
         : [
-            {
-              name: application.tenantName ?? "",
-              document:
-                application.tenantDocument ?? application.document ?? "",
-              email: application.tenantEmail ?? "",
-              phone: application.tenantPhone ?? "",
-            },
-          ];
+          {
+            name: application.tenantName ?? "",
+            document:
+              application.tenantDocument ?? application.document ?? "",
+            email: application.tenantEmail ?? "",
+            phone: application.tenantPhone ?? "",
+          },
+        ];
 
     form.reset({
       tenants: initialTenants,
