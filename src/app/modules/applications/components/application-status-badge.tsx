@@ -13,6 +13,7 @@ const statusClasses: Record<RentalApplicationStatus, string> = {
   ADMIN_REJECTED: "border-rose-200 bg-rose-50 text-rose-700",
   CANCELLED: "border-stone-300 bg-stone-100 text-stone-700",
   CONTRACT_DECLINED: "border-rose-300 bg-rose-50 text-rose-700",
+  WAITING_REAL_ESTATE_RETURN: "border-amber-300 bg-amber-50 text-amber-800 font-semibold",
 };
 
 export function ApplicationStatusBadge({

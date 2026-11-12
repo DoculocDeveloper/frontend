@@ -211,9 +211,15 @@ export function ContractDataPage() {
     return () => window.clearTimeout(timeout);
   }, [propertyZipCode, form]);
 
-  const isEditing = application?.status === "WAITING_ADMIN_CONTRACT";
+  const isEditing =
+    application?.status === "WAITING_ADMIN_CONTRACT" ||
+    (application?.status === "WAITING_REAL_ESTATE_RETURN" &&
+      application?.previousStatus === "WAITING_ADMIN_CONTRACT");
   const isAllowed =
-    application?.status === "WAITING_CONTRACT_DATA" || isEditing;
+    application?.status === "WAITING_CONTRACT_DATA" ||
+    (application?.status === "WAITING_REAL_ESTATE_RETURN" &&
+      application?.previousStatus === "WAITING_CONTRACT_DATA") ||
+    isEditing;
 
   const mutation = useMutation({
     mutationFn: (values: ContractDataBody) =>

@@ -11,7 +11,8 @@ export type RentalApplicationStatus =
   | "CONTESTED"
   | "ADMIN_REJECTED"
   | "CANCELLED"
-  | "CONTRACT_DECLINED";
+  | "CONTRACT_DECLINED"
+  | "WAITING_REAL_ESTATE_RETURN";
 
 export type Recommendation = "RECOMMENDED" | "NOT_RECOMMENDED" | string;
 export type AutomaticDecision = "APPROVED" | "REJECTED" | string;
@@ -95,6 +96,7 @@ export type RentalApplication = {
   automaticDecision?: AutomaticDecision | null;
   recommendation?: Recommendation | null;
   status: RentalApplicationStatus;
+  previousStatus?: RentalApplicationStatus | null;
   housingExpenseMin?: string | number | null;
   housingExpenseMax?: string | number | null;
   decisionReasons?: string[] | string | null;

@@ -72,6 +72,7 @@ VITE_API_URL=https://api.doculoc.com.br
     - Distinção visual clara: mensagens do próprio administrador logado identificam-se como "Você", enquanto mensagens de outros colegas da equipe Doculoc exibem o nome do administrador com badge `Doculoc • Equipe`.
     - As mensagens da imobiliária ficam alinhadas à esquerda com badge `Imobiliária`.
     - Contador de mensagens não lidas focado exclusivamente nas mensagens recebidas da contraparte.
+    - **Status Automático "Aguardando Retorno Imobiliária"**: Ao responder pelo chat como administrador, o status da consulta muda automaticamente para `WAITING_REAL_ESTATE_RETURN` ("Aguardando retorno imobiliária"); quando a imobiliária responde no chat, a consulta é restaurada automaticamente para o status em que estava antes da espera.
   - Comunicação em tempo real por polling automático (intervalo de 3,5s).
   - Suporte a envio de mensagens e upload de arquivos/documentos complementares (PDF, imagens PNG/JPG/WEBP, DOCX) com limite de até 15MB por anexo.
   - Download seguro do documento autenticado com permissão validada pelo backend.

@@ -184,11 +184,17 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const isSeller = normalizeRole(session?.user.role) === "SELLER";
   const reasons = normalizeReasons(application.decisionReasons);
   const canContest = !isAdmin && !isSeller && application.status === "REJECTED";
-  const isEditingContract = application.status === "WAITING_ADMIN_CONTRACT";
+  const isEditingContract =
+    application.status === "WAITING_ADMIN_CONTRACT" ||
+    (application.status === "WAITING_REAL_ESTATE_RETURN" &&
+      application.previousStatus === "WAITING_ADMIN_CONTRACT");
   const canFillContract =
     !isAdmin &&
     !isSeller &&
-    (application.status === "WAITING_CONTRACT_DATA" || isEditingContract);
+    (application.status === "WAITING_CONTRACT_DATA" ||
+      (application.status === "WAITING_REAL_ESTATE_RETURN" &&
+        application.previousStatus === "WAITING_CONTRACT_DATA") ||
+      isEditingContract);
   const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
   const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
   const contract = application.contract;
