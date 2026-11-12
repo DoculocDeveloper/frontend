@@ -10,7 +10,8 @@ export type RentalApplicationStatus =
   | "REJECTED"
   | "CONTESTED"
   | "ADMIN_REJECTED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "CONTRACT_DECLINED";
 
 export type Recommendation = "RECOMMENDED" | "NOT_RECOMMENDED" | string;
 export type AutomaticDecision = "APPROVED" | "REJECTED" | string;

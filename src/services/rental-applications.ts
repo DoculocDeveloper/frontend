@@ -330,3 +330,15 @@ export async function downloadMessageAttachment(
   window.URL.revokeObjectURL(url);
 }
 
+export async function declineRentalApplication(
+  applicationId: string,
+  reason?: string,
+) {
+  const response = await api.post<{ application: RentalApplication }>(
+    `/rental-applications/${applicationId}/decline`,
+    { reason },
+  );
+  return response.data.application;
+}
+
+

@@ -53,6 +53,11 @@ VITE_API_URL=https://api.doculoc.com.br
   - Suporte a envio de mensagens e upload de arquivos/documentos complementares (PDF, imagens PNG/JPG/WEBP, DOCX) com limite de até 15MB por anexo.
   - Download seguro do documento autenticado com permissão validada pelo backend.
 
+- **Declínio de Consulta pelo Locatário (`DeclineApplicationDialog`)**:
+  - Exclusivo para administradores na tela de detalhes da consulta (`ApplicationDetailPage`).
+  - Permite marcar o contrato/consulta como "Declinado pelo Locatário", mudando o status para `CONTRACT_DECLINED` ("Contrato declinado").
+  - Regra de negócio: só é exibido se o contrato **não** foi assinado. Se o contrato já estiver assinado, a opção fica permanentemente oculta.
+
 
 
 ## Expanding the ESLint configuration

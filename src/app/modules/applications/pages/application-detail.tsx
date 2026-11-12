@@ -53,6 +53,7 @@ import {
 import { getRentalApplication } from "@/services/rental-applications";
 import { ApplicationStatusBadge } from "../components/application-status-badge";
 import { AdminDecisionDialog } from "../components/admin-decision-dialog";
+import { DeclineApplicationDialog } from "../components/decline-application-dialog";
 import { ApplicationChat } from "../components/application-chat";
 import { OragoAnalysisReport } from "../components/orago-analysis-report";
 import {
@@ -214,8 +215,11 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     ["SENT", "PARTIALLY_SIGNED", "ENVELOPE_CREATED", "ACTION_REQUIRED"].includes(
       contract?.signatureStatus ?? "",
     );
+  const isSigned = contract?.signatureStatus === "SIGNED";
   const canReopenContract =
-    isContractGenerated && isAdmin && contract?.signatureStatus !== "SIGNED";
+    isContractGenerated && isAdmin && !isSigned;
+  const canDeclineByTenant =
+    isAdmin && !isSigned && application.status !== "CONTRACT_DECLINED";
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
   const tenantsList =
@@ -353,6 +357,9 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   contractId={contract.id}
                   applicationId={application.id}
                 />
+              ) : null}
+              {canDeclineByTenant ? (
+                <DeclineApplicationDialog applicationId={application.id} />
               ) : null}
               {isContractGenerated &&
               contract?.signatureStatus &&

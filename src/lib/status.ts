@@ -9,6 +9,7 @@ export const applicationStatusLabels: Record<RentalApplicationStatus, string> = 
   CONTESTED: "Contestada",
   ADMIN_REJECTED: "Reprovado",
   CANCELLED: "Cancelada",
+  CONTRACT_DECLINED: "Contrato declinado",
 };
 
 export const applicationStatusDescriptions: Record<RentalApplicationStatus, string> = {
@@ -20,6 +21,7 @@ export const applicationStatusDescriptions: Record<RentalApplicationStatus, stri
   CONTESTED: "Contestação enviada. Aguardando decisão manual do admin.",
   ADMIN_REJECTED: "Consulta reprovada.",
   CANCELLED: "Consulta cancelada.",
+  CONTRACT_DECLINED: "Contrato declinado pelo locatário.",
 };
 
 export const statusOptions: Array<{ value: RentalApplicationStatus | "ALL"; label: string }> = [
@@ -31,6 +33,7 @@ export const statusOptions: Array<{ value: RentalApplicationStatus | "ALL"; labe
   { value: "CONTESTED", label: applicationStatusLabels.CONTESTED },
   { value: "ADMIN_REJECTED", label: applicationStatusLabels.ADMIN_REJECTED },
   { value: "CANCELLED", label: applicationStatusLabels.CANCELLED },
+  { value: "CONTRACT_DECLINED", label: applicationStatusLabels.CONTRACT_DECLINED },
   { value: "CONSULTED", label: applicationStatusLabels.CONSULTED },
 ];
 
@@ -39,5 +42,5 @@ export function isContractReady(status: RentalApplicationStatus) {
 }
 
 export function isFinalStatus(status: RentalApplicationStatus) {
-  return ["CONTRACT_GENERATED", "ADMIN_REJECTED", "CANCELLED"].includes(status);
+  return ["CONTRACT_GENERATED", "ADMIN_REJECTED", "CANCELLED", "CONTRACT_DECLINED"].includes(status);
 }
