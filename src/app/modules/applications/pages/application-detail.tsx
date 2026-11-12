@@ -467,33 +467,35 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
-                        <div className="rounded-lg bg-muted/40 p-2 space-y-0.5 min-w-0">
-                          <span className="text-[11px] font-medium text-muted-foreground block whitespace-nowrap">
+                      <div className="space-y-2 pt-1 border-t border-border/40">
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs min-w-0">
+                          <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
                             Renda Estimada
                           </span>
-                          <span className="text-xs font-bold text-foreground block truncate">
-                            {tenant.presumedIncome
-                              ? formatCurrency(tenant.presumedIncome)
-                              : "Não informada"}
+                          <div className="flex items-center gap-1.5 min-w-0 justify-end">
+                            <span className="font-bold text-foreground truncate">
+                              {tenant.presumedIncome
+                                ? formatCurrency(tenant.presumedIncome)
+                                : "Não informada"}
+                            </span>
                             {tenant.incomePercentage ? (
-                              <span className="ml-1 text-[11px] font-normal text-muted-foreground">
-                                ({Number(tenant.incomePercentage).toFixed(0)}%)
+                              <span className="rounded bg-background px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground border border-border/60 shrink-0">
+                                {Number(tenant.incomePercentage).toFixed(0)}%
                               </span>
                             ) : null}
-                          </span>
+                          </div>
                         </div>
 
-                        <div className="rounded-lg bg-muted/40 p-2 space-y-0.5 min-w-0">
-                          <span className="text-[11px] font-medium text-muted-foreground block whitespace-nowrap">
-                            Órago
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs min-w-0">
+                          <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                            Parecer Órago
                           </span>
                           <span
                             className={cn(
-                              "text-xs font-semibold inline-flex items-center gap-1.5 truncate",
+                              "font-semibold inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs border shadow-2xs shrink-0",
                               tenant.recommendation === "RECOMMENDED"
-                                ? "text-emerald-700"
-                                : "text-amber-700",
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : "bg-amber-50 text-amber-800 border-amber-200",
                             )}
                           >
                             <span
@@ -504,7 +506,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                                   : "bg-amber-600",
                               )}
                             />
-                            <span className="truncate">
+                            <span>
                               {tenant.recommendation === "RECOMMENDED"
                                 ? "Recomendado"
                                 : "Com Apontamentos"}
