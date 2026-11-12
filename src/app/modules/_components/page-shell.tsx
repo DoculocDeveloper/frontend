@@ -109,10 +109,10 @@ export function MetricCard({
         className
       )}
     >
-      <div className="flex min-w-0 items-start justify-between gap-2.5 sm:gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-2.5">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
+          <div className="flex items-start gap-1 min-h-[2rem] sm:min-h-[2.25rem]">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground sm:text-xs leading-snug break-words">
               {label}
             </p>
             {tooltip ? (
@@ -121,7 +121,7 @@ export function MetricCard({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      className="cursor-help rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className="cursor-help rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 mt-0.5"
                       aria-label="Ver fórmula e explicação"
                     >
                       <Info className="size-3.5" />
