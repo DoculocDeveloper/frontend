@@ -94,6 +94,18 @@ export function ApplicationChat({ applicationId, isAdmin = false }: ApplicationC
     }
   }, [messages.length, isOpen]);
 
+  // Sincroniza o status da consulta na tela quando novas mensagens chegam no polling
+  useEffect(() => {
+    if (messages.length > 0) {
+      queryClient.invalidateQueries({
+        queryKey: ["rental-application", applicationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["rental-applications"],
+      });
+    }
+  }, [messages.length, applicationId, queryClient]);
+
   const sendMutation = useMutation({
     mutationFn: (data: { content?: string; file?: File }) =>
       sendApplicationMessage(applicationId, data),
@@ -109,6 +121,12 @@ export function ApplicationChat({ applicationId, isAdmin = false }: ApplicationC
       );
       queryClient.invalidateQueries({
         queryKey: ["rental-application-messages", applicationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["rental-application", applicationId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["rental-applications"],
       });
       setTimeout(scrollToBottom, 100);
     },
