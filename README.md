@@ -29,11 +29,11 @@ VITE_API_URL=https://api.doculoc.com.br
 
 ## Módulos e Funcionalidades
 
-- **Relatórios Operacionais e de Conversão (`ReportsPage`)**:
+- **Relatórios Operacionais e BI Executivo (`ReportsPage`)**:
   - Acessível em `/admin/relatorios` para perfil `ADMIN` com item direto na barra lateral ("Relatórios").
   - Filtro por Imobiliária (todas ou imobiliária individual).
   - Filtro por período de datas com atalhos rápidos ("Hoje", "Últimos 7 dias", "Últimos 30 dias", "Este mês", "Este ano", "Todo o histórico" e personalizado).
-  - Cards de métricas com totais consolidados:
+  - Cards de métricas com totais consolidados e **Tooltips explicativos interativos** exibindo as fórmulas matemáticas e regras de cada KPI.
     - Consultas realizadas (quantidade).
     - Contratos gerados (quantidade e valor total R$).
     - Contratos assinados (quantidade e valor total R$ - receita fechada).
@@ -41,7 +41,8 @@ VITE_API_URL=https://api.doculoc.com.br
     - Ticket médio dos contratos gerados por imobiliária e global.
     - Taxa de conversão de gerados (% sobre consultas) e de assinados (% sobre gerados).
     - Representatividade da imobiliária selecionada sobre o total de contratos assinados da Doculoc.
-  - Tabela de resumo por parceiro/imobiliária com detalhamento de volume, gerados, assinados (receita fechada), share % do total de contratos assinados da Doculoc (ex: 10 de 500 = 2.0%), declinados, ticket médio e taxa de conversão.
+  - **Funil de Conversão Comercial (Pipeline)**: Etapas visuais de Consultas ➔ Contratos Gerados ➔ Contratos Assinados (Receita).
+  - **Visão BI em Cards Executivos**: Cada imobiliária possui um card inteligente com mini-métricas, barra visual de participação no mercado Doculoc (Market Share) e tooltips explicativos (com opção de alternar para modo Tabela).
 
 - **Gestão de Contratos (`ContractsPage`)**:
   - Acessível em `/admin/contratos` (Admin) e `/real_estate/contratos` (Imobiliária e Vendedor).

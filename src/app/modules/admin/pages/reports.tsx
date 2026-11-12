@@ -8,8 +8,11 @@ import {
   ClipboardList,
   FileCheck2,
   FilterX,
+  LayoutGrid,
   PieChart,
+  Table as TableIcon,
   TrendingUp,
+  Trophy,
   XCircle,
 } from "lucide-react";
 
@@ -30,6 +33,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -51,9 +60,12 @@ type DatePreset =
   | "thisYear"
   | "custom";
 
+type ViewMode = "bi" | "table";
+
 export function ReportsPage() {
   const [selectedRealEstateId, setSelectedRealEstateId] = useState<string>("ALL");
   const [datePreset, setDatePreset] = useState<DatePreset>("last30");
+  const [viewMode, setViewMode] = useState<ViewMode>("bi");
   const [startDate, setStartDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -162,8 +174,8 @@ export function ReportsPage() {
 
       <PageHeader
         eyebrow="Admin Doculoc"
-        title="Relatórios Operacionais e Conversão"
-        description="Acompanhe o volume de consultas, contratos gerados, contratos assinados (receita fechada), contratos declinados e a representatividade de cada imobiliária no total da Doculoc."
+        title="Relatórios Operacionais e BI"
+        description="Painel analítico de desempenho, funil de locação, contratos gerados, receita fechada (assinados) e representatividade de cada imobiliária no total da Doculoc."
       />
 
       {/* Barra de Filtros */}
@@ -282,7 +294,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Cards de Métricas Principais */}
+      {/* Cards de Métricas Principais com Tooltips de Fórmulas */}
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           <Skeleton className="h-28 rounded-2xl" />
@@ -305,6 +317,17 @@ export function ReportsPage() {
             value={totals.totalApplications}
             description="No período selecionado"
             icon={<ClipboardList className="size-4.5" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-white">Consultas Realizadas</p>
+                <p className="text-stone-300">
+                  Total de consultas de análise cadastral criadas no período para o filtro atual.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-primary-foreground">
+                  Fórmula: Contagem de RentalApplication com createdAt no período.
+                </div>
+              </div>
+            }
           />
 
           {/* Contratos Gerados */}
@@ -315,6 +338,19 @@ export function ReportsPage() {
               totals.generatedContracts.totalValue
             )}`}
             icon={<CheckCircle2 className="size-4.5 text-blue-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-white">Contratos Gerados</p>
+                <p className="text-stone-300">
+                  Casos aprovados que tiveram documento DOCX de contrato emitido na plataforma.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-primary-foreground">
+                  Fórmula: Consultas com status = CONTRACT_GENERATED.
+                  <br />
+                  Valor Total = Soma dos valores de aluguel (rentValue).
+                </div>
+              </div>
+            }
           />
 
           {/* Contratos Assinados (Receita Fechada) */}
@@ -331,6 +367,19 @@ export function ReportsPage() {
                   )} • ${totals.signedConversionRate}% dos gerados`
             }
             icon={<FileCheck2 className="size-4.5 text-emerald-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-emerald-400">Contratos Assinados (Receita Fechada)</p>
+                <p className="text-stone-300">
+                  Contratos formalmente assinados por todas as partes via Clicksign. Representa a receita concretizada.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-emerald-300">
+                  Fórmula: status = CONTRACT_GENERATED e signatureStatus = SIGNED.
+                  <br />
+                  Share Doculoc = (Assinados da Imobiliária ÷ Total Geral Doculoc) × 100.
+                </div>
+              </div>
+            }
           />
 
           {/* Contratos Declinados */}
@@ -341,6 +390,19 @@ export function ReportsPage() {
               totals.declinedContracts.totalValue
             )}`}
             icon={<XCircle className="size-4.5 text-rose-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-rose-400">Contratos Declinados</p>
+                <p className="text-stone-300">
+                  Contratos em que o locatário declinou antes da assinatura.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-rose-300">
+                  Fórmula: Consultas com status = CONTRACT_DECLINED.
+                  <br />
+                  Valor Total = Soma dos valores de aluguel que deixaram de ser fechados.
+                </div>
+              </div>
+            }
           />
 
           {/* Ticket Médio */}
@@ -349,33 +411,179 @@ export function ReportsPage() {
             value={formatCurrency(totals.averageTicket)}
             description={`Conversão: ${totals.conversionRate}%`}
             icon={<TrendingUp className="size-4.5 text-indigo-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-white">Ticket Médio</p>
+                <p className="text-stone-300">
+                  Valor médio de locação dos contratos gerados no período.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-primary-foreground">
+                  Fórmula: Valor Total dos Contratos Gerados ÷ Quantidade de Contratos Gerados.
+                  <br />
+                  {totals.generatedContracts.count > 0
+                    ? `${formatCurrency(totals.generatedContracts.totalValue)} ÷ ${totals.generatedContracts.count} = ${formatCurrency(totals.averageTicket)}`
+                    : "Sem contratos gerados no período."}
+                </div>
+              </div>
+            }
           />
         </div>
       )}
 
-      {/* Tabela de Detalhamento por Imobiliária */}
+      {/* Funil Visual de Conversão Comercial (BI Pipeline) */}
+      {!isLoading && !isError && totals.totalApplications > 0 && (
+        <div className="rounded-2xl border bg-white p-4 shadow-sm backdrop-blur sm:rounded-3xl sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-semibold tracking-tight text-foreground sm:text-base">
+                Funil de Conversão Comercial (Pipeline)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Acompanhe a taxa de passagem de locatários entre cada estágio do processo.
+              </p>
+            </div>
+            <Badge variant="outline" className="text-xs font-semibold">
+              Taxa Geral: {totals.conversionRate}%
+            </Badge>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {/* Topo: Consultas */}
+            <div className="relative flex flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/70 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  1. Consultas
+                </span>
+                <Badge variant="secondary" className="text-[0.68rem]">
+                  100%
+                </Badge>
+              </div>
+              <div className="my-2">
+                <span className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  {totals.totalApplications}
+                </span>
+                <span className="ml-1 text-xs text-muted-foreground">iniciadas</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
+                <div className="h-full bg-stone-500 rounded-full" style={{ width: "100%" }} />
+              </div>
+            </div>
+
+            {/* Meio: Contratos Gerados */}
+            <div className="relative flex flex-col justify-between rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+                  2. Contratos Gerados
+                </span>
+                <Badge className="bg-blue-600 hover:bg-blue-700 text-[0.68rem]">
+                  {totals.conversionRate}%
+                </Badge>
+              </div>
+              <div className="my-2">
+                <span className="text-2xl font-bold tracking-tight text-blue-900 sm:text-3xl">
+                  {totals.generatedContracts.count}
+                </span>
+                <span className="ml-1 text-xs text-blue-700">
+                  ({formatCurrency(totals.generatedContracts.totalValue)})
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-100">
+                <div
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(totals.conversionRate, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Fundo: Contratos Assinados (Receita) */}
+            <div className="relative flex flex-col justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50/50 p-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
+                  3. Contratos Assinados
+                </span>
+                <Badge className="bg-emerald-600 hover:bg-emerald-700 text-[0.68rem]">
+                  {totals.signedConversionRate}% dos gerados
+                </Badge>
+              </div>
+              <div className="my-2">
+                <span className="text-2xl font-bold tracking-tight text-emerald-950 sm:text-3xl">
+                  {totals.signedContracts.count}
+                </span>
+                <span className="ml-1 text-xs font-semibold text-emerald-700">
+                  ({formatCurrency(totals.signedContracts.totalValue)})
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-emerald-100">
+                <div
+                  className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(totals.signedConversionRate, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seção Principal de BI: Resumo e Representatividade por Imobiliária */}
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              Resumo e Representatividade por Imobiliária
+              Desempenho e Representatividade por Imobiliária
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              Métricas de receita fechada (assinados), volume gerado, declinado, ticket médio e o percentual que cada imobiliária representa do total da Doculoc.
+              Métricas executivas de receita fechada (assinados), volume gerado e o percentual de mercado de cada parceiro.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              Total Doculoc Assinados: {doculocGlobal.totalSignedContracts.count} ({formatCurrency(doculocGlobal.totalSignedContracts.totalValue)})
-            </Badge>
+
+          {/* Seletor de Modo: BI Cards vs Tabela */}
+          <div className="flex items-center gap-1 rounded-2xl border bg-white p-1 shadow-xs">
+            <Button
+              type="button"
+              variant={viewMode === "bi" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("bi")}
+              className="h-8 gap-1.5 rounded-xl text-xs font-medium"
+            >
+              <LayoutGrid className="size-3.5" />
+              <span>Visão BI (Cards)</span>
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+              className="h-8 gap-1.5 rounded-xl text-xs font-medium"
+            >
+              <TableIcon className="size-3.5" />
+              <span>Tabela</span>
+            </Button>
           </div>
         </div>
 
+        {/* Indicador Global Doculoc */}
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-2.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-emerald-900">
+            <PieChart className="size-4 text-emerald-600" />
+            <span>
+              Total Geral Doculoc Assinado no Período:{" "}
+              <strong>
+                {doculocGlobal.totalSignedContracts.count} contratos
+              </strong>{" "}
+              ({formatCurrency(doculocGlobal.totalSignedContracts.totalValue)})
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {reportItems.length}{" "}
+            {reportItems.length === 1 ? "imobiliária ativa" : "imobiliárias ativas"}
+          </span>
+        </div>
+
         {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full rounded-xl" />
-            <Skeleton className="h-12 w-full rounded-xl" />
-            <Skeleton className="h-12 w-full rounded-xl" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-56 rounded-3xl" />
+            <Skeleton className="h-56 rounded-3xl" />
+            <Skeleton className="h-56 rounded-3xl" />
           </div>
         ) : reportItems.length === 0 ? (
           <EmptyState
@@ -383,7 +591,195 @@ export function ReportsPage() {
             title="Nenhum dado encontrado"
             description="Nenhuma consulta ou contrato registrado para os filtros selecionados."
           />
+        ) : viewMode === "bi" ? (
+          /* MODO BI: CARDS EXECUTIVOS & GRÁFICOS */
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {reportItems.map((item, index) => {
+              const isTop = index === 0 && item.signedContracts.count > 0;
+
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col justify-between rounded-3xl border bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  {/* Cabeçalho do Card */}
+                  <div className="space-y-2 border-b pb-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          {isTop ? (
+                            <Trophy className="size-4 shrink-0 text-amber-500" />
+                          ) : (
+                            <Building2 className="size-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <h3 className="truncate font-semibold text-foreground text-base">
+                            {item.name}
+                          </h3>
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground mt-0.5">
+                          {item.email}
+                          {item.document && ` • ${formatDocument(item.document)}`}
+                        </p>
+                      </div>
+
+                      {/* Badge de Share Doculoc */}
+                      <TooltipProvider delayDuration={150}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              className={`shrink-0 cursor-help font-bold text-xs ${
+                                item.signedContracts.count > 0
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                              }`}
+                            >
+                              <PieChart className="mr-1 size-3" />
+                              {item.signedSharePercentage}%
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-xs p-3 leading-relaxed bg-stone-900 text-stone-100 border border-stone-800">
+                            <p className="font-semibold text-emerald-400">
+                              Share Doculoc (% de Assinados)
+                            </p>
+                            <p className="text-stone-300 mt-1">
+                              Representa a fatia que esta imobiliária possui sobre todos os contratos assinados da Doculoc.
+                            </p>
+                            <div className="mt-2 rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-emerald-300">
+                              Fórmula: ({item.signedContracts.count} ÷ {doculocGlobal.totalSignedContracts.count}) × 100 = {item.signedSharePercentage}%
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    {/* Barra visual de participação no mercado Doculoc */}
+                    <div className="space-y-1 pt-1">
+                      <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground">
+                        <span>Participação no total da Doculoc</span>
+                        <span className="font-semibold text-emerald-700">
+                          {item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count} assinados
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
+                        <div
+                          className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(item.signedSharePercentage, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grid de Mini-Métricas da Imobiliária */}
+                  <div className="my-4 grid grid-cols-2 gap-2.5">
+                    {/* Consultas */}
+                    <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
+                      <div className="flex items-center justify-between text-muted-foreground">
+                        <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                          Consultas
+                        </span>
+                        <ClipboardList className="size-3.5" />
+                      </div>
+                      <strong className="mt-1 block text-lg font-bold text-foreground">
+                        {item.totalApplications}
+                      </strong>
+                      <span className="text-[0.68rem] text-muted-foreground">
+                        analisadas
+                      </span>
+                    </div>
+
+                    {/* Contratos Gerados */}
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-3">
+                      <div className="flex items-center justify-between text-blue-700">
+                        <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                          Gerados
+                        </span>
+                        <CheckCircle2 className="size-3.5" />
+                      </div>
+                      <strong className="mt-1 block text-lg font-bold text-blue-900">
+                        {item.generatedContracts.count}
+                      </strong>
+                      <span className="text-[0.68rem] font-medium text-blue-700 truncate block">
+                        {formatCurrency(item.generatedContracts.totalValue)}
+                      </span>
+                    </div>
+
+                    {/* Contratos Assinados (Destaque) */}
+                    <div className="col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 shadow-xs">
+                      <div className="flex items-center justify-between text-emerald-800">
+                        <div className="flex items-center gap-1.5">
+                          <FileCheck2 className="size-4 text-emerald-600" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
+                            Assinados (Receita Fechada)
+                          </span>
+                        </div>
+                        <Badge className="bg-emerald-600 text-white text-[0.68rem]">
+                          {item.signedConversionRate}% conversão
+                        </Badge>
+                      </div>
+                      <div className="mt-2 flex items-baseline justify-between">
+                        <span className="text-2xl font-bold tracking-tight text-emerald-950">
+                          {item.signedContracts.count}{" "}
+                          <span className="text-xs font-normal text-emerald-800">
+                            contratos
+                          </span>
+                        </span>
+                        <span className="text-sm font-bold text-emerald-700">
+                          {formatCurrency(item.signedContracts.totalValue)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Ticket Médio */}
+                    <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
+                      <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Ticket Médio
+                      </span>
+                      <strong className="mt-1 block text-sm font-bold text-foreground">
+                        {formatCurrency(item.averageTicket)}
+                      </strong>
+                      <span className="text-[0.68rem] text-muted-foreground">
+                        por contrato gerado
+                      </span>
+                    </div>
+
+                    {/* Declinados */}
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-3">
+                      <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
+                        Declinados
+                      </span>
+                      <strong className="mt-1 block text-sm font-bold text-rose-900">
+                        {item.declinedContracts.count}
+                      </strong>
+                      <span className="text-[0.68rem] text-rose-700 truncate block">
+                        {formatCurrency(item.declinedContracts.totalValue)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rodapé do Card: Conversão */}
+                  <div className="flex items-center justify-between border-t pt-3 text-xs">
+                    <span className="text-muted-foreground">
+                      Conversão Geral (Consultas ➔ Gerados):
+                    </span>
+                    <Badge
+                      variant={item.conversionRate > 0 ? "secondary" : "outline"}
+                      className={
+                        item.conversionRate >= 30
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold"
+                          : "font-semibold"
+                      }
+                    >
+                      {item.conversionRate}%
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          /* MODO TABELA TRADICIONAL */
           <div className="overflow-hidden rounded-2xl border bg-white shadow-sm sm:rounded-3xl">
             <Table>
               <TableHeader>

@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -80,6 +87,7 @@ export function MetricCard({
   trend,
   className,
   valueClassName,
+  tooltip,
 }: {
   label: string;
   value: string | number;
@@ -88,6 +96,7 @@ export function MetricCard({
   trend?: string;
   className?: string;
   valueClassName?: string;
+  tooltip?: ReactNode;
 }) {
   const isStringValue = typeof value === "string";
   const isCurrency = isStringValue && value.includes("R$");
@@ -102,9 +111,33 @@ export function MetricCard({
     >
       <div className="flex min-w-0 items-start justify-between gap-2.5 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
-            {label}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
+              {label}
+            </p>
+            {tooltip ? (
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="cursor-help rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      aria-label="Ver fórmula e explicação"
+                    >
+                      <Info className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="start"
+                    className="max-w-xs text-xs p-3 leading-relaxed shadow-lg bg-stone-900 text-stone-100 border border-stone-800"
+                  >
+                    {tooltip}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+          </div>
           <strong
             className={cn(
               "mt-3 block font-semibold tracking-tight text-foreground whitespace-nowrap",
