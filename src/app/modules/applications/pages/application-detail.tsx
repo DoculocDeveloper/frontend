@@ -225,7 +225,10 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const canReopenContract =
     isContractGenerated && isAdmin && !isSigned;
   const canDeclineByTenant =
-    isAdmin && !isSigned && application.status !== "CONTRACT_DECLINED";
+    !isSeller &&
+    !isSigned &&
+    application.status !== "CONTRACT_DECLINED" &&
+    application.status !== "CANCELLED";
   const requesterName =
     application.requester?.realEstateProfile?.name ?? application.requester?.name ?? "Imobiliária";
   const tenantsList =

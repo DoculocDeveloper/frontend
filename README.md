@@ -78,9 +78,10 @@ VITE_API_URL=https://api.doculoc.com.br
   - Download seguro do documento autenticado com permissão validada pelo backend.
 
 - **Declínio de Consulta pelo Locatário (`DeclineApplicationDialog`)**:
-  - Exclusivo para administradores na tela de detalhes da consulta (`ApplicationDetailPage`).
+  - Disponível para administradores e imobiliárias na tela de detalhes da consulta (`ApplicationDetailPage`).
   - Permite marcar o contrato/consulta como "Declinado pelo Locatário", mudando o status para `CONTRACT_DECLINED` ("Contrato declinado").
   - Regra de negócio: só é exibido se o contrato **não** foi assinado. Se o contrato já estiver assinado, a opção fica permanentemente oculta.
+  - Ordenação prioritária na listagem: consultas com novas mensagens não lidas no chat e novas consultas ficam sempre posicionadas em primeiro lugar.
 
 
 
