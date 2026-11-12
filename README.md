@@ -66,7 +66,12 @@ VITE_API_URL=https://api.doculoc.com.br
   - No detalhe da consulta (`ApplicationDetailPage`), exibe card de Composição de Renda com soma de rendas, renda individual, percentual de contribuição e destaque da fonte de renda principal, além de alternância dos relatórios completos Órago para administradores.
 
 - **Chat Interno por Consulta com Envio de Documentos (`ApplicationChat`)**:
-  - Disponível no detalhe da consulta (`ApplicationDetailPage`), acessível por imobiliárias, corretores associados e administradores.
+  - Disponível no detalhe da consulta (`ApplicationDetailPage`), acessível por imobiliárias e administradores.
+  - **Histórico Compartilhado entre Administradores**: Qualquer administrador ou executivo de contas da Doculoc visualiza o histórico completo da conversa com a imobiliária.
+    - As mensagens enviadas por qualquer membro da equipe Doculoc são agrupadas à direita (lado Doculoc).
+    - Distinção visual clara: mensagens do próprio administrador logado identificam-se como "Você", enquanto mensagens de outros colegas da equipe Doculoc exibem o nome do administrador com badge `Doculoc • Equipe`.
+    - As mensagens da imobiliária ficam alinhadas à esquerda com badge `Imobiliária`.
+    - Contador de mensagens não lidas focado exclusivamente nas mensagens recebidas da contraparte.
   - Comunicação em tempo real por polling automático (intervalo de 3,5s).
   - Suporte a envio de mensagens e upload de arquivos/documentos complementares (PDF, imagens PNG/JPG/WEBP, DOCX) com limite de até 15MB por anexo.
   - Download seguro do documento autenticado com permissão validada pelo backend.

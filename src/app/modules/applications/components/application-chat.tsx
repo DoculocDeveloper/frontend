@@ -11,6 +11,7 @@ import {
   X,
   File,
   ChevronDown,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,7 +52,7 @@ function getFileIcon(mimeType?: string | null) {
   return <File className="size-4 text-primary shrink-0" />;
 }
 
-export function ApplicationChat({ applicationId }: ApplicationChatProps) {
+export function ApplicationChat({ applicationId, isAdmin = false }: ApplicationChatProps) {
   const { session } = useAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -61,6 +62,11 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const isCurrentUserStaff =
+    session?.user?.role === "ADMIN" ||
+    session?.user?.role === "ACCOUNT_EXECUTIVE" ||
+    Boolean(isAdmin);
+
   // Poll messages every 3.5 seconds
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["rental-application-messages", applicationId],
@@ -69,9 +75,14 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
     staleTime: 1000,
   });
 
-  const unreadCount = messages.filter(
-    (m) => m.senderId !== session?.user?.id && !m.readAt,
-  ).length;
+  // Mensagens pendentes de leitura recebidas do lado oposto (Imobiliária <-> Doculoc)
+  const unreadCount = messages.filter((m) => {
+    if (m.readAt) return false;
+    if (isCurrentUserStaff) {
+      return !m.isStaff;
+    }
+    return m.isStaff;
+  }).length;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -179,7 +190,9 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                   ) : null}
                 </div>
                 <p className="text-[11px] text-primary-foreground/80 truncate">
-                  Imobiliária & Administrador
+                  {isCurrentUserStaff
+                    ? "Histórico compartilhado • Atendimento Doculoc"
+                    : "Imobiliária & Atendimento Doculoc"}
                 </p>
               </div>
             </div>
@@ -197,6 +210,19 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
               </Button>
             </div>
           </div>
+
+          {/* Banner de histórico compartilhado para a equipe Doculoc */}
+          {isCurrentUserStaff ? (
+            <div className="flex items-center justify-between bg-blue-50 px-3.5 py-1.5 border-b border-blue-200/80 text-[11px] text-blue-900">
+              <span className="flex items-center gap-1.5 font-medium truncate">
+                <Users className="size-3.5 shrink-0 text-blue-600" />
+                Histórico compartilhado da equipe Doculoc
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 shrink-0">
+                Visão Staff
+              </span>
+            </div>
+          ) : null}
 
           {/* Subheader aviso de anexos */}
           <div className="flex items-center justify-between bg-muted/50 px-3.5 py-1.5 border-b border-border/40 text-[11px] text-muted-foreground">
@@ -225,30 +251,83 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
               </div>
             ) : (
               messages.map((message) => {
-                const isMe = message.senderId === session?.user?.id;
+                const isAuthoredByMe = message.senderId === session?.user?.id;
+                const isStaffMessage = Boolean(message.isStaff);
+
+                // Se quem está logado for Doculoc (Admin/Staff), seu lado (à direita) são as mensagens da equipe Doculoc.
+                // Se quem está logado for Imobiliária, seu lado (à direita) são as mensagens da imobiliária.
+                const isFromMySide = isCurrentUserStaff ? isStaffMessage : !isStaffMessage;
+
+                // Identificação visual do remetente
+                let senderName: string;
+                let badgeLabel: string;
+                let badgeClass: string;
+                let bubbleClass: string;
+                let isBubbleDark: boolean;
+
+                if (isCurrentUserStaff) {
+                  if (isStaffMessage) {
+                    if (isAuthoredByMe) {
+                      senderName = "Você";
+                      badgeLabel = "Doculoc";
+                      badgeClass = "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30";
+                      bubbleClass = "bg-primary text-primary-foreground rounded-tr-xs";
+                      isBubbleDark = true;
+                    } else {
+                      senderName = message.sender?.name || "Administrador";
+                      badgeLabel = "Doculoc • Equipe";
+                      badgeClass = "bg-blue-100 text-blue-900 border-blue-200";
+                      bubbleClass = "bg-blue-600 text-white rounded-tr-xs shadow-xs";
+                      isBubbleDark = true;
+                    }
+                  } else {
+                    senderName = message.sender?.name || "Imobiliária";
+                    badgeLabel = "Imobiliária";
+                    badgeClass = "bg-emerald-100 text-emerald-900 border-emerald-200";
+                    bubbleClass = "bg-muted/80 text-foreground border border-border/60 rounded-tl-xs";
+                    isBubbleDark = false;
+                  }
+                } else {
+                  if (!isStaffMessage) {
+                    senderName = isAuthoredByMe ? "Você" : message.sender?.name || "Imobiliária";
+                    badgeLabel = "Imobiliária";
+                    badgeClass = "bg-emerald-100 text-emerald-900 border-emerald-200";
+                    bubbleClass = "bg-primary text-primary-foreground rounded-tr-xs";
+                    isBubbleDark = true;
+                  } else {
+                    senderName = message.sender?.name || "Atendimento Doculoc";
+                    badgeLabel = "Doculoc";
+                    badgeClass = "bg-blue-100 text-blue-900 border-blue-200";
+                    bubbleClass = "bg-muted/80 text-foreground border border-border/60 rounded-tl-xs";
+                    isBubbleDark = false;
+                  }
+                }
 
                 return (
                   <div
                     key={message.id}
                     className={cn(
                       "flex flex-col max-w-[85%]",
-                      isMe ? "ml-auto items-end" : "mr-auto items-start",
+                      isFromMySide ? "ml-auto items-end" : "mr-auto items-start",
                     )}
                   >
-                    <div className="flex items-center gap-1.5 mb-1 px-1">
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 mb-1 px-1",
+                        isFromMySide ? "justify-end" : "justify-start",
+                      )}
+                    >
                       <span className="text-[11px] font-semibold text-foreground/80 truncate max-w-[130px]">
-                        {isMe ? "Você" : message.sender?.name || "Usuário"}
+                        {senderName}
                       </span>
                       <Badge
                         variant="secondary"
                         className={cn(
                           "text-[9px] px-1 py-0 h-4 font-semibold uppercase tracking-wider",
-                          message.isStaff
-                            ? "bg-blue-100 text-blue-900 border border-blue-200"
-                            : "bg-emerald-100 text-emerald-900 border border-emerald-200",
+                          badgeClass,
                         )}
                       >
-                        {message.isStaff ? "Doculoc" : "Imobiliária"}
+                        {badgeLabel}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground">
                         {formatDate(message.createdAt)}
@@ -258,9 +337,7 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                     <div
                       className={cn(
                         "rounded-2xl p-3 shadow-2xs space-y-2 text-sm",
-                        isMe
-                          ? "bg-primary text-primary-foreground rounded-tr-xs"
-                          : "bg-muted/70 text-foreground border border-border/60 rounded-tl-xs",
+                        bubbleClass,
                       )}
                     >
                       {message.content ? (
@@ -273,13 +350,13 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                         <div
                           className={cn(
                             "rounded-xl p-2.5 flex items-center justify-between gap-3 border transition-colors",
-                            isMe
-                              ? "bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground"
+                            isBubbleDark
+                              ? "bg-white/10 border-white/20 text-white"
                               : "bg-background border-border/80 text-foreground",
                           )}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="p-1.5 rounded-lg bg-background/80 shadow-2xs shrink-0">
+                            <div className="p-1.5 rounded-lg bg-background/90 text-foreground shadow-2xs shrink-0">
                               {getFileIcon(message.attachmentMimeType)}
                             </div>
                             <div className="min-w-0 text-left">
@@ -289,7 +366,12 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                               >
                                 {message.attachmentFileName || "Arquivo anexado"}
                               </p>
-                              <span className="text-[10px] opacity-75">
+                              <span
+                                className={cn(
+                                  "text-[10px]",
+                                  isBubbleDark ? "text-white/80" : "text-muted-foreground",
+                                )}
+                              >
                                 {formatBytes(message.attachmentSizeBytes)}
                               </span>
                             </div>
@@ -302,10 +384,10 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                             disabled={downloadingId === message.id}
                             onClick={() => handleDownload(message)}
                             className={cn(
-                              "size-7 shrink-0 rounded-lg hover:bg-black/10",
-                              isMe
-                                ? "text-primary-foreground hover:text-white"
-                                : "text-foreground",
+                              "size-7 shrink-0 rounded-lg",
+                              isBubbleDark
+                                ? "text-white hover:bg-white/20 hover:text-white"
+                                : "text-foreground hover:bg-black/10",
                             )}
                             title="Baixar documento"
                           >
@@ -385,7 +467,11 @@ export function ApplicationChat({ applicationId }: ApplicationChatProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Digite uma mensagem... (Enter para enviar)"
+                placeholder={
+                  isCurrentUserStaff
+                    ? "Responder como Doculoc... (Enter para enviar)"
+                    : "Digite uma mensagem... (Enter para enviar)"
+                }
                 disabled={sendMutation.isPending}
                 className="min-h-[40px] max-h-[100px] rounded-xl text-xs resize-none py-2.5 px-3"
                 rows={1}
