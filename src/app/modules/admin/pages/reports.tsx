@@ -6,7 +6,9 @@ import {
   Building2,
   CheckCircle2,
   ClipboardList,
+  FileCheck2,
   FilterX,
+  PieChart,
   TrendingUp,
   XCircle,
 } from "lucide-react";
@@ -137,12 +139,22 @@ export function ReportsPage() {
   const totals = data?.totals ?? {
     totalApplications: 0,
     generatedContracts: { count: 0, totalValue: 0 },
+    signedContracts: { count: 0, totalValue: 0 },
     declinedContracts: { count: 0, totalValue: 0 },
     averageTicket: 0,
     conversionRate: 0,
+    signedConversionRate: 0,
+    signedSharePercentage: 0,
+  };
+
+  const doculocGlobal = data?.doculocGlobal ?? {
+    totalApplications: 0,
+    totalGeneratedContracts: { count: 0, totalValue: 0 },
+    totalSignedContracts: { count: 0, totalValue: 0 },
   };
 
   const reportItems = data?.realEstates ?? [];
+  const isIndividualFilter = selectedRealEstateId !== "ALL";
 
   return (
     <PageShell>
@@ -151,7 +163,7 @@ export function ReportsPage() {
       <PageHeader
         eyebrow="Admin Doculoc"
         title="Relatórios Operacionais e Conversão"
-        description="Acompanhe o desempenho de consultas e contratos gerados, declinados e o ticket médio geral ou individual por imobiliária."
+        description="Acompanhe o volume de consultas, contratos gerados, contratos assinados (receita fechada), contratos declinados e a representatividade de cada imobiliária no total da Doculoc."
       />
 
       {/* Barra de Filtros */}
@@ -270,9 +282,10 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Cards de Métricas */}
+      {/* Cards de Métricas Principais */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
@@ -285,7 +298,7 @@ export function ReportsPage() {
           description="Não foi possível obter os dados do relatório. Tente novamente mais tarde."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {/* Consultas realizadas */}
           <MetricCard
             label="Consultas Realizadas"
@@ -301,7 +314,23 @@ export function ReportsPage() {
             description={`Total: ${formatCurrency(
               totals.generatedContracts.totalValue
             )}`}
-            icon={<CheckCircle2 className="size-5 text-emerald-600" />}
+            icon={<CheckCircle2 className="size-5 text-blue-600" />}
+          />
+
+          {/* Contratos Assinados (Receita Fechada) */}
+          <MetricCard
+            label="Contratos Assinados"
+            value={totals.signedContracts.count}
+            description={
+              isIndividualFilter
+                ? `Representa ${totals.signedSharePercentage}% dos ${doculocGlobal.totalSignedContracts.count} assinados da Doculoc (${formatCurrency(
+                    totals.signedContracts.totalValue
+                  )})`
+                : `Receita fechada: ${formatCurrency(
+                    totals.signedContracts.totalValue
+                  )} (${totals.signedConversionRate}% dos gerados)`
+            }
+            icon={<FileCheck2 className="size-5 text-emerald-600" />}
           />
 
           {/* Contratos Declinados */}
@@ -318,7 +347,7 @@ export function ReportsPage() {
           <MetricCard
             label="Ticket Médio"
             value={formatCurrency(totals.averageTicket)}
-            description={`Conversão: ${totals.conversionRate}%`}
+            description={`Conversão geral: ${totals.conversionRate}%`}
             icon={<TrendingUp className="size-5 text-indigo-600" />}
           />
         </div>
@@ -326,18 +355,20 @@ export function ReportsPage() {
 
       {/* Tabela de Detalhamento por Imobiliária */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              Resumo por Imobiliária
+              Resumo e Representatividade por Imobiliária
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              Detalhamento de volume, contratos gerados, declinados e ticket médio de cada parceiro.
+              Métricas de receita fechada (assinados), volume gerado, declinado, ticket médio e o percentual que cada imobiliária representa do total da Doculoc.
             </p>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {reportItems.length} {reportItems.length === 1 ? "imobiliária" : "imobiliárias"}
-          </span>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              Total Doculoc Assinados: {doculocGlobal.totalSignedContracts.count} ({formatCurrency(doculocGlobal.totalSignedContracts.totalValue)})
+            </Badge>
+          </div>
         </div>
 
         {isLoading ? (
@@ -364,6 +395,12 @@ export function ReportsPage() {
                   <TableHead className="font-semibold text-foreground">
                     Contratos Gerados
                   </TableHead>
+                  <TableHead className="font-semibold text-foreground text-emerald-700">
+                    Contratos Assinados
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground">
+                    Share Doculoc (% Assinados)
+                  </TableHead>
                   <TableHead className="font-semibold text-foreground">
                     Contratos Declinados
                   </TableHead>
@@ -378,7 +415,7 @@ export function ReportsPage() {
               <TableBody>
                 {reportItems.map((item) => (
                   <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
-                    <TableCell className="max-w-[240px]">
+                    <TableCell className="max-w-[220px]">
                       <div className="font-medium text-foreground truncate">
                         {item.name}
                       </div>
@@ -388,14 +425,16 @@ export function ReportsPage() {
                       </div>
                     </TableCell>
 
+                    {/* Consultas */}
                     <TableCell className="text-center">
                       <Badge variant="outline" className="font-semibold">
                         {item.totalApplications}
                       </Badge>
                     </TableCell>
 
+                    {/* Contratos Gerados */}
                     <TableCell>
-                      <div className="font-medium text-emerald-600">
+                      <div className="font-medium text-blue-600">
                         {item.generatedContracts.count}{" "}
                         <span className="text-xs font-normal text-muted-foreground">
                           ({formatCurrency(item.generatedContracts.totalValue)})
@@ -403,6 +442,40 @@ export function ReportsPage() {
                       </div>
                     </TableCell>
 
+                    {/* Contratos Assinados (Receita Fechada) */}
+                    <TableCell>
+                      <div className="font-semibold text-emerald-700">
+                        {item.signedContracts.count}{" "}
+                        <span className="text-xs font-normal text-emerald-600">
+                          ({formatCurrency(item.signedContracts.totalValue)})
+                        </span>
+                      </div>
+                      <div className="text-[0.68rem] text-muted-foreground">
+                        {item.signedConversionRate}% dos gerados
+                      </div>
+                    </TableCell>
+
+                    {/* Representatividade sobre o total da Doculoc */}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={item.signedContracts.count > 0 ? "default" : "outline"}
+                          className={
+                            item.signedContracts.count > 0
+                              ? "bg-emerald-600 hover:bg-emerald-700 font-bold"
+                              : "text-muted-foreground"
+                          }
+                        >
+                          <PieChart className="mr-1 size-3" />
+                          {item.signedSharePercentage}%
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          ({item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count})
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    {/* Contratos Declinados */}
                     <TableCell>
                       <div className="font-medium text-rose-600">
                         {item.declinedContracts.count}{" "}
@@ -412,12 +485,14 @@ export function ReportsPage() {
                       </div>
                     </TableCell>
 
+                    {/* Ticket Médio */}
                     <TableCell>
                       <div className="font-semibold text-foreground">
                         {formatCurrency(item.averageTicket)}
                       </div>
                     </TableCell>
 
+                    {/* Conversão */}
                     <TableCell className="text-right">
                       <Badge
                         variant={item.conversionRate > 0 ? "secondary" : "outline"}

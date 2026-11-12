@@ -10,12 +10,19 @@ export interface RealEstateReportItem {
     count: number;
     totalValue: number;
   };
+  signedContracts: {
+    count: number;
+    totalValue: number;
+  };
   declinedContracts: {
     count: number;
     totalValue: number;
   };
   averageTicket: number;
-  conversionRate: number;
+  conversionRate: number; // gerados / consultas (%)
+  signedConversionRate: number; // assinados / gerados (%)
+  signedSharePercentage: number; // % do total de assinados da Doculoc (ex: 2.0%)
+  signedValueSharePercentage: number; // % do valor total de assinados da Doculoc
 }
 
 export interface ReportsSummaryResponse {
@@ -23,9 +30,24 @@ export interface ReportsSummaryResponse {
     startDate?: string;
     endDate?: string;
   };
+  doculocGlobal: {
+    totalApplications: number;
+    totalGeneratedContracts: {
+      count: number;
+      totalValue: number;
+    };
+    totalSignedContracts: {
+      count: number;
+      totalValue: number;
+    };
+  };
   totals: {
     totalApplications: number;
     generatedContracts: {
+      count: number;
+      totalValue: number;
+    };
+    signedContracts: {
       count: number;
       totalValue: number;
     };
@@ -35,6 +57,8 @@ export interface ReportsSummaryResponse {
     };
     averageTicket: number;
     conversionRate: number;
+    signedConversionRate: number;
+    signedSharePercentage: number;
   };
   realEstates: RealEstateReportItem[];
 }

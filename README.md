@@ -36,10 +36,12 @@ VITE_API_URL=https://api.doculoc.com.br
   - Cards de métricas com totais consolidados:
     - Consultas realizadas (quantidade).
     - Contratos gerados (quantidade e valor total R$).
+    - Contratos assinados (quantidade e valor total R$ - receita fechada).
     - Contratos declinados (quantidade e valor total R$).
     - Ticket médio dos contratos gerados por imobiliária e global.
-    - Taxa de conversão (% de contratos gerados sobre consultas).
-  - Tabela de resumo por parceiro/imobiliária com detalhamento de volume, gerados, declinados, ticket médio e taxa de conversão.
+    - Taxa de conversão de gerados (% sobre consultas) e de assinados (% sobre gerados).
+    - Representatividade da imobiliária selecionada sobre o total de contratos assinados da Doculoc.
+  - Tabela de resumo por parceiro/imobiliária com detalhamento de volume, gerados, assinados (receita fechada), share % do total de contratos assinados da Doculoc (ex: 10 de 500 = 2.0%), declinados, ticket médio e taxa de conversão.
 
 - **Gestão de Contratos (`ContractsPage`)**:
   - Acessível em `/admin/contratos` (Admin) e `/real_estate/contratos` (Imobiliária e Vendedor).
