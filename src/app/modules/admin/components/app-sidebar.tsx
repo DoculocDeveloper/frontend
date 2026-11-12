@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BarChart3,
   Building2,
   ClipboardList,
   FileClock,
@@ -53,6 +54,7 @@ const adminItems: NavItem[] = [
   },
   { title: "Contratos", href: "/admin/contratos", icon: FileClock },
   { title: "Imobiliárias", href: "/admin/imobiliarias", icon: Building2 },
+  { title: "Relatórios", href: "/admin/relatorios", icon: BarChart3 },
 ];
 
 const realEstateItems: NavItem[] = [

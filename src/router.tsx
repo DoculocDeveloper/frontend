@@ -16,6 +16,7 @@ import { ContractDataPage } from "./app/modules/applications/pages/contract-data
 import { ContestApplicationPage } from "./app/modules/applications/pages/contest-application";
 import { RealEstatesPage } from "./app/modules/admin/pages/real-estates";
 import { RealEstateDetailPage } from "./app/modules/admin/pages/real-estate-detail";
+import { ReportsPage } from "./app/modules/admin/pages/reports";
 import ForgotPasswordPage from "./app/modules/auth/pages/forgot-password";
 import ResetPasswordPage from "./app/modules/auth/pages/reset-password";
 import { useAuth } from "@/hooks/use-auth";
@@ -163,6 +164,10 @@ export const router = createBrowserRouter([
       {
         path: "imobiliarias/:id",
         element: <RealEstateDetailPage />,
+      },
+      {
+        path: "relatorios",
+        element: <ReportsPage />,
       },
     ],
   },

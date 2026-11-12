@@ -29,6 +29,18 @@ VITE_API_URL=https://api.doculoc.com.br
 
 ## Módulos e Funcionalidades
 
+- **Relatórios Operacionais e de Conversão (`ReportsPage`)**:
+  - Acessível em `/admin/relatorios` para perfil `ADMIN` com item direto na barra lateral ("Relatórios").
+  - Filtro por Imobiliária (todas ou imobiliária individual).
+  - Filtro por período de datas com atalhos rápidos ("Hoje", "Últimos 7 dias", "Últimos 30 dias", "Este mês", "Este ano", "Todo o histórico" e personalizado).
+  - Cards de métricas com totais consolidados:
+    - Consultas realizadas (quantidade).
+    - Contratos gerados (quantidade e valor total R$).
+    - Contratos declinados (quantidade e valor total R$).
+    - Ticket médio dos contratos gerados por imobiliária e global.
+    - Taxa de conversão (% de contratos gerados sobre consultas).
+  - Tabela de resumo por parceiro/imobiliária com detalhamento de volume, gerados, declinados, ticket médio e taxa de conversão.
+
 - **Gestão de Contratos (`ContractsPage`)**:
   - Acessível em `/admin/contratos` (Admin) e `/real_estate/contratos` (Imobiliária e Vendedor).
   - **Aba Pendentes**: Exibe casos com dados de locatário e imóvel preenchidos aguardando geração de contrato DOCX.
