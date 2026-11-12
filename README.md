@@ -42,7 +42,10 @@ VITE_API_URL=https://api.doculoc.com.br
     - Taxa de conversão de gerados (% sobre consultas) e de assinados (% sobre gerados).
     - Representatividade da imobiliária selecionada sobre o total de contratos assinados da Doculoc.
   - **Funil de Conversão Comercial (Pipeline)**: Etapas visuais de Consultas ➔ Contratos Gerados ➔ Contratos Assinados (Receita).
-  - **Visão BI em Cards Executivos**: Cada imobiliária possui um card inteligente com mini-métricas, barra visual de participação no mercado Doculoc (Market Share) e tooltips explicativos (com opção de alternar para modo Tabela).
+  - **Visão BI em Cards Executivos**:
+    - Quando sem filtro de imobiliária: exibe 2 cards amplos por linha com paginação de 6 por página.
+    - Quando filtrada uma imobiliária: o card ocupa 100% da largura da tela, totalmente expandido e preenchido sem espaços em branco, incluindo funil individual e 5 mini-indicadores horizontais.
+    - Opção de alternar a qualquer momento para o modo Tabela.
 
 - **Gestão de Contratos (`ContractsPage`)**:
   - Acessível em `/admin/contratos` (Admin) e `/real_estate/contratos` (Imobiliária e Vendedor).

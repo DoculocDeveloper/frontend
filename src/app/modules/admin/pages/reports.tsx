@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import {
   EmptyState,
   MetricCard,
@@ -66,6 +67,9 @@ export function ReportsPage() {
   const [selectedRealEstateId, setSelectedRealEstateId] = useState<string>("ALL");
   const [datePreset, setDatePreset] = useState<DatePreset>("last30");
   const [viewMode, setViewMode] = useState<ViewMode>("bi");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 6;
+
   const [startDate, setStartDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -97,6 +101,7 @@ export function ReportsPage() {
 
   const handleApplyPreset = (preset: DatePreset) => {
     setDatePreset(preset);
+    setCurrentPage(1);
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
@@ -145,6 +150,7 @@ export function ReportsPage() {
 
   const handleClearFilters = () => {
     setSelectedRealEstateId("ALL");
+    setCurrentPage(1);
     handleApplyPreset("last30");
   };
 
@@ -207,7 +213,10 @@ export function ReportsPage() {
             </label>
             <Select
               value={selectedRealEstateId}
-              onValueChange={setSelectedRealEstateId}
+              onValueChange={(val) => {
+                setSelectedRealEstateId(val);
+                setCurrentPage(1);
+              }}
             >
               <SelectTrigger className="h-10 w-full bg-white">
                 <div className="flex items-center gap-2 truncate">
@@ -242,6 +251,7 @@ export function ReportsPage() {
                 onChange={(e) => {
                   setStartDate(e.target.value);
                   setDatePreset("custom");
+                  setCurrentPage(1);
                 }}
                 className="h-10 bg-white"
               />
@@ -260,6 +270,7 @@ export function ReportsPage() {
                 onChange={(e) => {
                   setEndDate(e.target.value);
                   setDatePreset("custom");
+                  setCurrentPage(1);
                 }}
                 className="h-10 bg-white"
               />
@@ -580,10 +591,9 @@ export function ReportsPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-56 rounded-3xl" />
-            <Skeleton className="h-56 rounded-3xl" />
-            <Skeleton className="h-56 rounded-3xl" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-64 rounded-3xl" />
+            <Skeleton className="h-64 rounded-3xl" />
           </div>
         ) : reportItems.length === 0 ? (
           <EmptyState
@@ -592,319 +602,574 @@ export function ReportsPage() {
             description="Nenhuma consulta ou contrato registrado para os filtros selecionados."
           />
         ) : viewMode === "bi" ? (
-          /* MODO BI: CARDS EXECUTIVOS & GRÁFICOS */
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {reportItems.map((item, index) => {
-              const isTop = index === 0 && item.signedContracts.count > 0;
-
-              return (
+          /* MODO BI */
+          isIndividualFilter ? (
+            /* QUANDO FILTRADO A IMOBILIÁRIA: CARD OCUPA 100% DA LARGURA, EXPANDIDO E SEM ESPAÇO EM BRANCO */
+            <div className="w-full">
+              {reportItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col justify-between rounded-3xl border bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                  className="w-full rounded-3xl border bg-white p-6 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-xl space-y-6"
                 >
-                  {/* Cabeçalho do Card */}
-                  <div className="space-y-2 border-b pb-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          {isTop ? (
-                            <Trophy className="size-4 shrink-0 text-amber-500" />
-                          ) : (
-                            <Building2 className="size-4 shrink-0 text-muted-foreground" />
-                          )}
-                          <h3 className="truncate font-semibold text-foreground text-base">
+                  {/* Cabeçalho Expandido */}
+                  <div className="flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-2xl bg-primary/10 p-3.5 text-primary shrink-0">
+                        <Building2 className="size-7" />
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                             {item.name}
                           </h3>
+                          <TooltipProvider delayDuration={150}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  className={`cursor-help font-bold text-xs py-1 px-3 ${
+                                    item.signedContracts.count > 0
+                                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                      : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                                  }`}
+                                >
+                                  <PieChart className="mr-1.5 size-3.5" />
+                                  {item.signedSharePercentage}% de Share Doculoc
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs text-xs p-3 leading-relaxed bg-stone-900 text-stone-100 border border-stone-800">
+                                <p className="font-semibold text-emerald-400">
+                                  Share Doculoc (% de Assinados)
+                                </p>
+                                <p className="text-stone-300 mt-1">
+                                  Representa a fatia que esta imobiliária possui sobre todos os contratos assinados da Doculoc.
+                                </p>
+                                <div className="mt-2 rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-emerald-300">
+                                  Fórmula: ({item.signedContracts.count} ÷ {doculocGlobal.totalSignedContracts.count}) × 100 = {item.signedSharePercentage}%
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                        <p className="truncate text-xs text-muted-foreground mt-0.5">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {item.email}
-                          {item.document && ` • ${formatDocument(item.document)}`}
+                          {item.document && ` • Documento: ${formatDocument(item.document)}`}
                         </p>
                       </div>
-
-                      {/* Badge de Share Doculoc */}
-                      <TooltipProvider delayDuration={150}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge
-                              className={`shrink-0 cursor-help font-bold text-xs ${
-                                item.signedContracts.count > 0
-                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                              }`}
-                            >
-                              <PieChart className="mr-1 size-3" />
-                              {item.signedSharePercentage}%
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs p-3 leading-relaxed bg-stone-900 text-stone-100 border border-stone-800">
-                            <p className="font-semibold text-emerald-400">
-                              Share Doculoc (% de Assinados)
-                            </p>
-                            <p className="text-stone-300 mt-1">
-                              Representa a fatia que esta imobiliária possui sobre todos os contratos assinados da Doculoc.
-                            </p>
-                            <div className="mt-2 rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-emerald-300">
-                              Fórmula: ({item.signedContracts.count} ÷ {doculocGlobal.totalSignedContracts.count}) × 100 = {item.signedSharePercentage}%
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
                     </div>
 
-                    {/* Barra visual de participação no mercado Doculoc */}
-                    <div className="space-y-1 pt-1">
-                      <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground">
-                        <span>Participação no total da Doculoc</span>
-                        <span className="font-semibold text-emerald-700">
-                          {item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count} assinados
+                    {/* Destaque de Contratos Fechados no Topo */}
+                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-3.5">
+                      <div>
+                        <span className="block text-[0.68rem] font-semibold uppercase tracking-wider text-emerald-800">
+                          Participação de Receita Fechada
                         </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
-                        <div
-                          className="h-full bg-emerald-600 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(item.signedSharePercentage, 100)}%`,
-                          }}
-                        />
+                        <strong className="text-xl font-bold text-emerald-950">
+                          {item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count} assinados
+                        </strong>
+                        <span className="block text-xs font-semibold text-emerald-700">
+                          {formatCurrency(item.signedContracts.totalValue)} em receita
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Grid de Mini-Métricas da Imobiliária */}
-                  <div className="my-4 grid grid-cols-2 gap-2.5">
-                    {/* Consultas */}
-                    <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
+                  {/* Barra Larga de Representatividade Doculoc */}
+                  <div className="space-y-2 rounded-2xl border border-stone-200/80 bg-stone-50/60 p-4">
+                    <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground gap-1">
+                      <span className="font-medium">
+                        Representatividade desta imobiliária sobre o total de contratos assinados da Doculoc:
+                      </span>
+                      <span className="font-bold text-emerald-700">
+                        {item.signedSharePercentage}% do total Doculoc
+                      </span>
+                    </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-stone-200">
+                      <div
+                        className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(item.signedSharePercentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 5 Indicadores Expandidos em Linha Completa (Sem espaço em branco) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3.5">
+                    {/* 1. Consultas */}
+                    <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-4">
                       <div className="flex items-center justify-between text-muted-foreground">
-                        <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
                           Consultas
                         </span>
-                        <ClipboardList className="size-3.5" />
+                        <ClipboardList className="size-4 text-muted-foreground" />
                       </div>
-                      <strong className="mt-1 block text-lg font-bold text-foreground">
+                      <strong className="mt-2 block text-2xl font-bold text-foreground">
                         {item.totalApplications}
                       </strong>
-                      <span className="text-[0.68rem] text-muted-foreground">
-                        analisadas
+                      <span className="text-xs text-muted-foreground">
+                        analisadas no período
                       </span>
                     </div>
 
-                    {/* Contratos Gerados */}
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-3">
+                    {/* 2. Contratos Gerados */}
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
                       <div className="flex items-center justify-between text-blue-700">
-                        <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
                           Gerados
                         </span>
-                        <CheckCircle2 className="size-3.5" />
+                        <CheckCircle2 className="size-4 text-blue-600" />
                       </div>
-                      <strong className="mt-1 block text-lg font-bold text-blue-900">
+                      <strong className="mt-2 block text-2xl font-bold text-blue-900">
                         {item.generatedContracts.count}
                       </strong>
-                      <span className="text-[0.68rem] font-medium text-blue-700 truncate block">
+                      <span className="text-xs font-semibold text-blue-700 block truncate">
                         {formatCurrency(item.generatedContracts.totalValue)}
                       </span>
                     </div>
 
-                    {/* Contratos Assinados (Destaque) */}
-                    <div className="col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 shadow-xs">
+                    {/* 3. Contratos Assinados (Destaque Principal) */}
+                    <div className="col-span-2 sm:col-span-1 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs">
                       <div className="flex items-center justify-between text-emerald-800">
-                        <div className="flex items-center gap-1.5">
-                          <FileCheck2 className="size-4 text-emerald-600" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
-                            Assinados (Receita Fechada)
-                          </span>
-                        </div>
-                        <Badge className="bg-emerald-600 text-white text-[0.68rem]">
-                          {item.signedConversionRate}% conversão
+                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-950">
+                          Assinados
+                        </span>
+                        <Badge className="bg-emerald-600 text-white text-[0.68rem] px-2 py-0.5">
+                          {item.signedConversionRate}% dos gerados
                         </Badge>
                       </div>
-                      <div className="mt-2 flex items-baseline justify-between">
-                        <span className="text-2xl font-bold tracking-tight text-emerald-950">
-                          {item.signedContracts.count}{" "}
-                          <span className="text-xs font-normal text-emerald-800">
-                            contratos
-                          </span>
-                        </span>
-                        <span className="text-sm font-bold text-emerald-700">
-                          {formatCurrency(item.signedContracts.totalValue)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Ticket Médio */}
-                    <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
-                      <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Ticket Médio
-                      </span>
-                      <strong className="mt-1 block text-sm font-bold text-foreground">
-                        {formatCurrency(item.averageTicket)}
+                      <strong className="mt-2 block text-2xl font-bold text-emerald-950">
+                        {item.signedContracts.count}
                       </strong>
-                      <span className="text-[0.68rem] text-muted-foreground">
-                        por contrato gerado
+                      <span className="text-xs font-bold text-emerald-700 block truncate">
+                        {formatCurrency(item.signedContracts.totalValue)}
                       </span>
                     </div>
 
-                    {/* Declinados */}
-                    <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-3">
-                      <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
-                        Declinados
-                      </span>
-                      <strong className="mt-1 block text-sm font-bold text-rose-900">
+                    {/* 4. Contratos Declinados */}
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4">
+                      <div className="flex items-center justify-between text-rose-700">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
+                          Declinados
+                        </span>
+                        <XCircle className="size-4 text-rose-600" />
+                      </div>
+                      <strong className="mt-2 block text-2xl font-bold text-rose-900">
                         {item.declinedContracts.count}
                       </strong>
-                      <span className="text-[0.68rem] text-rose-700 truncate block">
+                      <span className="text-xs font-semibold text-rose-700 block truncate">
                         {formatCurrency(item.declinedContracts.totalValue)}
                       </span>
                     </div>
+
+                    {/* 5. Ticket Médio */}
+                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+                      <div className="flex items-center justify-between text-indigo-700">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
+                          Ticket Médio
+                        </span>
+                        <TrendingUp className="size-4 text-indigo-600" />
+                      </div>
+                      <strong className="mt-2 block text-xl sm:text-2xl font-bold text-indigo-950 whitespace-nowrap">
+                        {formatCurrency(item.averageTicket)}
+                      </strong>
+                      <span className="text-xs text-indigo-700">
+                        por contrato gerado
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Rodapé do Card: Conversão */}
-                  <div className="flex items-center justify-between border-t pt-3 text-xs">
-                    <span className="text-muted-foreground">
-                      Conversão Geral (Consultas ➔ Gerados):
-                    </span>
-                    <Badge
-                      variant={item.conversionRate > 0 ? "secondary" : "outline"}
-                      className={
-                        item.conversionRate >= 30
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold"
-                          : "font-semibold"
-                      }
-                    >
-                      {item.conversionRate}%
-                    </Badge>
+                  {/* Funil Visual Exclusivo da Imobiliária */}
+                  <div className="rounded-2xl border border-stone-200/80 bg-stone-50/50 p-4">
+                    <div className="mb-3 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground uppercase tracking-wider">
+                        Funil Comercial desta Imobiliária
+                      </span>
+                      <Badge variant="outline" className="font-semibold">
+                        Conversão Geral: {item.conversionRate}%
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl border bg-white p-3 text-center">
+                        <span className="text-[0.68rem] text-muted-foreground uppercase font-semibold block">
+                          1. Consultas
+                        </span>
+                        <strong className="text-lg font-bold text-foreground">
+                          {item.totalApplications}
+                        </strong>
+                      </div>
+                      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-center">
+                        <span className="text-[0.68rem] text-blue-700 uppercase font-semibold block">
+                          2. Gerados ({item.conversionRate}%)
+                        </span>
+                        <strong className="text-lg font-bold text-blue-900">
+                          {item.generatedContracts.count}
+                        </strong>
+                      </div>
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center">
+                        <span className="text-[0.68rem] text-emerald-800 uppercase font-semibold block">
+                          3. Assinados ({item.signedConversionRate}%)
+                        </span>
+                        <strong className="text-lg font-bold text-emerald-950">
+                          {item.signedContracts.count}
+                        </strong>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            /* QUANDO NÃO FILTRADO: 2 CARDS POR LINHA, CARDS MAIORES E PAGINAÇÃO DE 6 POR PÁGINA */
+            <div className="space-y-6">
+              <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
+                {reportItems
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((item, index) => {
+                    const globalIndex = (currentPage - 1) * itemsPerPage + index;
+                    const isTop = globalIndex === 0 && item.signedContracts.count > 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col justify-between rounded-3xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                      >
+                        {/* Cabeçalho do Card */}
+                        <div className="space-y-3 border-b pb-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                {isTop ? (
+                                  <Trophy className="size-5 shrink-0 text-amber-500" />
+                                ) : (
+                                  <Building2 className="size-5 shrink-0 text-muted-foreground" />
+                                )}
+                                <h3 className="truncate font-bold text-foreground text-lg sm:text-xl">
+                                  {item.name}
+                                </h3>
+                              </div>
+                              <p className="truncate text-xs text-muted-foreground mt-1">
+                                {item.email}
+                                {item.document && ` • ${formatDocument(item.document)}`}
+                              </p>
+                            </div>
+
+                            {/* Badge de Share Doculoc */}
+                            <TooltipProvider delayDuration={150}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    className={`shrink-0 cursor-help font-bold text-xs py-1 px-2.5 ${
+                                      item.signedContracts.count > 0
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                                    }`}
+                                  >
+                                    <PieChart className="mr-1 size-3.5" />
+                                    {item.signedSharePercentage}%
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-xs p-3 leading-relaxed bg-stone-900 text-stone-100 border border-stone-800">
+                                  <p className="font-semibold text-emerald-400">
+                                    Share Doculoc (% de Assinados)
+                                  </p>
+                                  <p className="text-stone-300 mt-1">
+                                    Representa a fatia que esta imobiliária possui sobre todos os contratos assinados da Doculoc.
+                                  </p>
+                                  <div className="mt-2 rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-emerald-300">
+                                    Fórmula: ({item.signedContracts.count} ÷ {doculocGlobal.totalSignedContracts.count}) × 100 = {item.signedSharePercentage}%
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+
+                          {/* Barra visual de participação no mercado Doculoc */}
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Participação no total da Doculoc</span>
+                              <span className="font-semibold text-emerald-700">
+                                {item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count} assinados
+                              </span>
+                            </div>
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-stone-100">
+                              <div
+                                className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${Math.min(item.signedSharePercentage, 100)}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Grid de Mini-Métricas da Imobiliária (Amplo em 2 por linha!) */}
+                        <div className="my-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {/* Consultas */}
+                          <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
+                            <div className="flex items-center justify-between text-muted-foreground">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Consultas
+                              </span>
+                              <ClipboardList className="size-4" />
+                            </div>
+                            <strong className="mt-1.5 block text-xl font-bold text-foreground">
+                              {item.totalApplications}
+                            </strong>
+                            <span className="text-[0.68rem] text-muted-foreground">
+                              analisadas
+                            </span>
+                          </div>
+
+                          {/* Contratos Gerados */}
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5">
+                            <div className="flex items-center justify-between text-blue-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Gerados
+                              </span>
+                              <CheckCircle2 className="size-4" />
+                            </div>
+                            <strong className="mt-1.5 block text-xl font-bold text-blue-900">
+                              {item.generatedContracts.count}
+                            </strong>
+                            <span className="text-[0.68rem] font-semibold text-blue-700 truncate block">
+                              {formatCurrency(item.generatedContracts.totalValue)}
+                            </span>
+                          </div>
+
+                          {/* Contratos Assinados (Destaque Principal) */}
+                          <div className="col-span-2 sm:col-span-1 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 shadow-xs">
+                            <div className="flex items-center justify-between text-emerald-800">
+                              <span className="text-[0.68rem] font-bold uppercase tracking-wider text-emerald-900">
+                                Assinados
+                              </span>
+                              <Badge className="bg-emerald-600 text-white text-[0.68rem] px-1.5 py-0.2">
+                                {item.signedConversionRate}%
+                              </Badge>
+                            </div>
+                            <strong className="mt-1.5 block text-xl font-bold text-emerald-950">
+                              {item.signedContracts.count}
+                            </strong>
+                            <span className="text-[0.68rem] font-bold text-emerald-700 truncate block">
+                              {formatCurrency(item.signedContracts.totalValue)}
+                            </span>
+                          </div>
+
+                          {/* Ticket Médio */}
+                          <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
+                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Ticket Médio
+                            </span>
+                            <strong className="mt-1.5 block text-base font-bold text-foreground whitespace-nowrap">
+                              {formatCurrency(item.averageTicket)}
+                            </strong>
+                            <span className="text-[0.68rem] text-muted-foreground">
+                              por contrato gerado
+                            </span>
+                          </div>
+
+                          {/* Declinados */}
+                          <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-3.5">
+                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
+                              Declinados
+                            </span>
+                            <strong className="mt-1.5 block text-base font-bold text-rose-900">
+                              {item.declinedContracts.count}
+                            </strong>
+                            <span className="text-[0.68rem] text-rose-700 truncate block">
+                              {formatCurrency(item.declinedContracts.totalValue)}
+                            </span>
+                          </div>
+
+                          {/* Conversão Geral */}
+                          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3.5 flex flex-col justify-between">
+                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-indigo-700">
+                              Conversão
+                            </span>
+                            <strong className="mt-1.5 block text-base font-bold text-indigo-950">
+                              {item.conversionRate}%
+                            </strong>
+                            <span className="text-[0.68rem] text-indigo-700">
+                              consultas ➔ gerados
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Rodapé do Card */}
+                        <div className="flex items-center justify-between border-t pt-3.5 text-xs">
+                          <span className="text-muted-foreground">
+                            Eficiência de Fechamento (Assinados / Gerados):
+                          </span>
+                          <Badge
+                            variant={item.signedConversionRate > 0 ? "secondary" : "outline"}
+                            className={
+                              item.signedConversionRate >= 50
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
+                                : "font-semibold"
+                            }
+                          >
+                            {item.signedConversionRate}% fechados
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Paginação: 6 imobiliárias por página */}
+              {reportItems.length > itemsPerPage && (
+                <div className="pt-2">
+                  <Pagination
+                    page={currentPage}
+                    perPage={itemsPerPage}
+                    total={reportItems.length}
+                    onPageChange={setCurrentPage}
+                    itemLabel="imobiliárias"
+                  />
+                </div>
+              )}
+            </div>
+          )
         ) : (
           /* MODO TABELA TRADICIONAL */
-          <div className="overflow-hidden rounded-2xl border bg-white shadow-sm sm:rounded-3xl">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="font-semibold text-foreground">Imobiliária</TableHead>
-                  <TableHead className="text-center font-semibold text-foreground">
-                    Consultas
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">
-                    Contratos Gerados
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground text-emerald-700">
-                    Contratos Assinados
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">
-                    Share Doculoc (% Assinados)
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">
-                    Contratos Declinados
-                  </TableHead>
-                  <TableHead className="font-semibold text-foreground">
-                    Ticket Médio
-                  </TableHead>
-                  <TableHead className="text-right font-semibold text-foreground">
-                    Conversão
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reportItems.map((item) => (
-                  <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
-                    <TableCell className="max-w-[220px]">
-                      <div className="font-medium text-foreground truncate">
-                        {item.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {item.email}
-                        {item.document && ` • ${formatDocument(item.document)}`}
-                      </div>
-                    </TableCell>
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-2xl border bg-white shadow-sm sm:rounded-3xl">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="font-semibold text-foreground">Imobiliária</TableHead>
+                    <TableHead className="text-center font-semibold text-foreground">
+                      Consultas
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Contratos Gerados
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground text-emerald-700">
+                      Contratos Assinados
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Share Doculoc (% Assinados)
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Contratos Declinados
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">
+                      Ticket Médio
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">
+                      Conversão
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(isIndividualFilter
+                    ? reportItems
+                    : reportItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  ).map((item) => (
+                    <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
+                      <TableCell className="max-w-[220px]">
+                        <div className="font-medium text-foreground truncate">
+                          {item.name}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {item.email}
+                          {item.document && ` • ${formatDocument(item.document)}`}
+                        </div>
+                      </TableCell>
 
-                    {/* Consultas */}
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="font-semibold">
-                        {item.totalApplications}
-                      </Badge>
-                    </TableCell>
+                      {/* Consultas */}
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="font-semibold">
+                          {item.totalApplications}
+                        </Badge>
+                      </TableCell>
 
-                    {/* Contratos Gerados */}
-                    <TableCell>
-                      <div className="font-medium text-blue-600">
-                        {item.generatedContracts.count}{" "}
-                        <span className="text-xs font-normal text-muted-foreground">
-                          ({formatCurrency(item.generatedContracts.totalValue)})
-                        </span>
-                      </div>
-                    </TableCell>
+                      {/* Contratos Gerados */}
+                      <TableCell>
+                        <div className="font-medium text-blue-600">
+                          {item.generatedContracts.count}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            ({formatCurrency(item.generatedContracts.totalValue)})
+                          </span>
+                        </div>
+                      </TableCell>
 
-                    {/* Contratos Assinados (Receita Fechada) */}
-                    <TableCell>
-                      <div className="font-semibold text-emerald-700">
-                        {item.signedContracts.count}{" "}
-                        <span className="text-xs font-normal text-emerald-600">
-                          ({formatCurrency(item.signedContracts.totalValue)})
-                        </span>
-                      </div>
-                      <div className="text-[0.68rem] text-muted-foreground">
-                        {item.signedConversionRate}% dos gerados
-                      </div>
-                    </TableCell>
+                      {/* Contratos Assinados (Receita Fechada) */}
+                      <TableCell>
+                        <div className="font-semibold text-emerald-700">
+                          {item.signedContracts.count}{" "}
+                          <span className="text-xs font-normal text-emerald-600">
+                            ({formatCurrency(item.signedContracts.totalValue)})
+                          </span>
+                        </div>
+                        <div className="text-[0.68rem] text-muted-foreground">
+                          {item.signedConversionRate}% dos gerados
+                        </div>
+                      </TableCell>
 
-                    {/* Representatividade sobre o total da Doculoc */}
-                    <TableCell>
-                      <div className="flex items-center gap-2">
+                      {/* Representatividade sobre o total da Doculoc */}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={item.signedContracts.count > 0 ? "default" : "outline"}
+                            className={
+                              item.signedContracts.count > 0
+                                ? "bg-emerald-600 hover:bg-emerald-700 font-bold"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            <PieChart className="mr-1 size-3" />
+                            {item.signedSharePercentage}%
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            ({item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count})
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Contratos Declinados */}
+                      <TableCell>
+                        <div className="font-medium text-rose-600">
+                          {item.declinedContracts.count}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            ({formatCurrency(item.declinedContracts.totalValue)})
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Ticket Médio */}
+                      <TableCell>
+                        <div className="font-semibold text-foreground">
+                          {formatCurrency(item.averageTicket)}
+                        </div>
+                      </TableCell>
+
+                      {/* Conversão */}
+                      <TableCell className="text-right">
                         <Badge
-                          variant={item.signedContracts.count > 0 ? "default" : "outline"}
+                          variant={item.conversionRate > 0 ? "secondary" : "outline"}
                           className={
-                            item.signedContracts.count > 0
-                              ? "bg-emerald-600 hover:bg-emerald-700 font-bold"
-                              : "text-muted-foreground"
+                            item.conversionRate >= 30
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : ""
                           }
                         >
-                          <PieChart className="mr-1 size-3" />
-                          {item.signedSharePercentage}%
+                          {item.conversionRate}%
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          ({item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count})
-                        </span>
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-                    {/* Contratos Declinados */}
-                    <TableCell>
-                      <div className="font-medium text-rose-600">
-                        {item.declinedContracts.count}{" "}
-                        <span className="text-xs font-normal text-muted-foreground">
-                          ({formatCurrency(item.declinedContracts.totalValue)})
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    {/* Ticket Médio */}
-                    <TableCell>
-                      <div className="font-semibold text-foreground">
-                        {formatCurrency(item.averageTicket)}
-                      </div>
-                    </TableCell>
-
-                    {/* Conversão */}
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={item.conversionRate > 0 ? "secondary" : "outline"}
-                        className={
-                          item.conversionRate >= 30
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : ""
-                        }
-                      >
-                        {item.conversionRate}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {/* Paginação da Tabela */}
+            {!isIndividualFilter && reportItems.length > itemsPerPage && (
+              <Pagination
+                page={currentPage}
+                perPage={itemsPerPage}
+                total={reportItems.length}
+                onPageChange={setCurrentPage}
+                itemLabel="imobiliárias"
+              />
+            )}
           </div>
         )}
       </div>
