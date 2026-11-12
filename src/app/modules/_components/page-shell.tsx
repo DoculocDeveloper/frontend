@@ -78,30 +78,62 @@ export function MetricCard({
   description,
   icon,
   trend,
+  className,
+  valueClassName,
 }: {
   label: string;
   value: string | number;
   description?: string;
   icon?: ReactNode;
   trend?: string;
+  className?: string;
+  valueClassName?: string;
 }) {
+  const isStringValue = typeof value === "string";
+  const isCurrency = isStringValue && value.includes("R$");
+  const isLongValue = isStringValue && value.length > 8;
+
   return (
-    <div className="flashlight-card group min-w-0 rounded-2xl bg-white/80 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl sm:rounded-3xl sm:p-5">
-      <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
-        <div className="min-w-0">
-          <p className="wrap-break-word text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
+    <div
+      className={cn(
+        "flashlight-card group min-w-0 rounded-2xl bg-white/80 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl sm:rounded-3xl sm:p-5",
+        className
+      )}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-2.5 sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
             {label}
           </p>
-          <strong className="mt-3 block wrap-break-word text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <strong
+            className={cn(
+              "mt-3 block font-semibold tracking-tight text-foreground whitespace-nowrap",
+              isCurrency || isLongValue
+                ? "text-base sm:text-lg xl:text-xl 2xl:text-2xl"
+                : "text-2xl sm:text-3xl",
+              valueClassName
+            )}
+            title={typeof value === "string" ? value : undefined}
+          >
             {value}
           </strong>
         </div>
-        {icon ? <div className="shrink-0 rounded-2xl bg-primary/10 p-3 text-primary">{icon}</div> : null}
+        {icon ? (
+          <div className="shrink-0 rounded-2xl bg-primary/10 p-2 text-primary sm:p-2.5">
+            {icon}
+          </div>
+        ) : null}
       </div>
-      <div className="mt-5 flex min-w-0 flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        {description ? <span className="wrap-break-word">{description}</span> : <span />}
+      <div className="mt-3.5 flex min-w-0 flex-col gap-1.5 text-xs text-muted-foreground sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:text-xs xl:text-sm">
+        {description ? (
+          <span className="leading-snug break-words">
+            {description}
+          </span>
+        ) : (
+          <span />
+        )}
         {trend ? (
-          <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          <span className="w-fit shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
             {trend}
           </span>
         ) : null}

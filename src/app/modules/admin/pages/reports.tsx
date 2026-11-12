@@ -284,7 +284,7 @@ export function ReportsPage() {
 
       {/* Cards de Métricas Principais */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
@@ -298,13 +298,13 @@ export function ReportsPage() {
           description="Não foi possível obter os dados do relatório. Tente novamente mais tarde."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {/* Consultas realizadas */}
           <MetricCard
             label="Consultas Realizadas"
             value={totals.totalApplications}
-            description="Total de consultas no período"
-            icon={<ClipboardList className="size-5" />}
+            description="No período selecionado"
+            icon={<ClipboardList className="size-4.5" />}
           />
 
           {/* Contratos Gerados */}
@@ -314,7 +314,7 @@ export function ReportsPage() {
             description={`Total: ${formatCurrency(
               totals.generatedContracts.totalValue
             )}`}
-            icon={<CheckCircle2 className="size-5 text-blue-600" />}
+            icon={<CheckCircle2 className="size-4.5 text-blue-600" />}
           />
 
           {/* Contratos Assinados (Receita Fechada) */}
@@ -323,14 +323,14 @@ export function ReportsPage() {
             value={totals.signedContracts.count}
             description={
               isIndividualFilter
-                ? `Representa ${totals.signedSharePercentage}% dos ${doculocGlobal.totalSignedContracts.count} assinados da Doculoc (${formatCurrency(
+                ? `${totals.signedSharePercentage}% da Doculoc (${formatCurrency(
                     totals.signedContracts.totalValue
                   )})`
-                : `Receita fechada: ${formatCurrency(
+                : `${formatCurrency(
                     totals.signedContracts.totalValue
-                  )} (${totals.signedConversionRate}% dos gerados)`
+                  )} • ${totals.signedConversionRate}% dos gerados`
             }
-            icon={<FileCheck2 className="size-5 text-emerald-600" />}
+            icon={<FileCheck2 className="size-4.5 text-emerald-600" />}
           />
 
           {/* Contratos Declinados */}
@@ -340,15 +340,15 @@ export function ReportsPage() {
             description={`Total: ${formatCurrency(
               totals.declinedContracts.totalValue
             )}`}
-            icon={<XCircle className="size-5 text-rose-600" />}
+            icon={<XCircle className="size-4.5 text-rose-600" />}
           />
 
           {/* Ticket Médio */}
           <MetricCard
             label="Ticket Médio"
             value={formatCurrency(totals.averageTicket)}
-            description={`Conversão geral: ${totals.conversionRate}%`}
-            icon={<TrendingUp className="size-5 text-indigo-600" />}
+            description={`Conversão: ${totals.conversionRate}%`}
+            icon={<TrendingUp className="size-4.5 text-indigo-600" />}
           />
         </div>
       )}
