@@ -119,6 +119,28 @@ export function ApplicationChat({ applicationId, isAdmin = false }: ApplicationC
         ["rental-application-messages", applicationId],
         (old = []) => [...old, newMessage],
       );
+
+      // Feedback imediato na tela: se o staff enviou mensagem, atualiza o status no cache para Aguardando Retorno
+      if (isCurrentUserStaff) {
+        queryClient.setQueryData<any>(
+          ["rental-application", applicationId],
+          (oldApp: any) => {
+            if (!oldApp) return oldApp;
+            if (["CONTRACT_DECLINED", "CANCELLED", "CONTRACT_GENERATED"].includes(oldApp.status)) {
+              return oldApp;
+            }
+            return {
+              ...oldApp,
+              status: "WAITING_REAL_ESTATE_RETURN",
+              previousStatus:
+                oldApp.status !== "WAITING_REAL_ESTATE_RETURN"
+                  ? oldApp.status
+                  : oldApp.previousStatus,
+            };
+          }
+        );
+      }
+
       queryClient.invalidateQueries({
         queryKey: ["rental-application-messages", applicationId],
       });
