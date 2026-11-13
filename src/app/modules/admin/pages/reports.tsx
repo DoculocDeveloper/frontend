@@ -10,9 +10,11 @@ import {
   FilterX,
   LayoutGrid,
   PieChart,
+  ShieldAlert,
   Table as TableIcon,
   TrendingUp,
   Trophy,
+  UserX,
   XCircle,
 } from "lucide-react";
 
@@ -156,6 +158,7 @@ export function ReportsPage() {
 
   const totals = data?.totals ?? {
     totalApplications: 0,
+    rejectedApplications: { count: 0, totalValue: 0, rate: 0 },
     generatedContracts: { count: 0, totalValue: 0 },
     signedContracts: { count: 0, totalValue: 0 },
     declinedContracts: { count: 0, totalValue: 0 },
@@ -307,7 +310,8 @@ export function ReportsPage() {
 
       {/* Cards de Métricas Principais com Tooltips de Fórmulas */}
       {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+          <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
@@ -321,7 +325,7 @@ export function ReportsPage() {
           description="Não foi possível obter os dados do relatório. Tente novamente mais tarde."
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           {/* Consultas realizadas */}
           <MetricCard
             label="Consultas Realizadas"
@@ -336,6 +340,33 @@ export function ReportsPage() {
                 </p>
                 <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-primary-foreground">
                   Fórmula: Contagem de RentalApplication com createdAt no período.
+                </div>
+              </div>
+            }
+          />
+
+          {/* Consultas Reprovadas */}
+          <MetricCard
+            label="Consultas Reprovadas"
+            value={totals.rejectedApplications?.count ?? 0}
+            description={
+              totals.rejectedApplications?.count
+                ? `${totals.rejectedApplications.rate}% • Total: ${formatCurrency(
+                    totals.rejectedApplications.totalValue
+                  )}`
+                : "Nenhuma no período"
+            }
+            icon={<ShieldAlert className="size-4.5 text-amber-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-amber-400">Consultas Reprovadas</p>
+                <p className="text-stone-300">
+                  Consultas que não atingiram os critérios de aprovação na análise cadastral e de crédito.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-amber-300">
+                  Fórmula: Consultas com status = ADMIN_REJECTED ou REJECTED.
+                  <br />
+                  Taxa = (Reprovadas ÷ Consultas Realizadas) × 100.
                 </div>
               </div>
             }
@@ -393,19 +424,19 @@ export function ReportsPage() {
             }
           />
 
-          {/* Contratos Declinados */}
+          {/* Reprovado por Imobiliária */}
           <MetricCard
-            label="Contratos Declinados"
+            label="Reprovado por Imobiliária"
             value={totals.declinedContracts.count}
             description={`Total: ${formatCurrency(
               totals.declinedContracts.totalValue
             )}`}
-            icon={<XCircle className="size-4.5 text-rose-600" />}
+            icon={<UserX className="size-4.5 text-rose-600" />}
             tooltip={
               <div className="space-y-1.5">
-                <p className="font-semibold text-rose-400">Contratos Declinados</p>
+                <p className="font-semibold text-rose-400">Reprovado por Imobiliária</p>
                 <p className="text-stone-300">
-                  Contratos em que o locatário declinou antes da assinatura.
+                  Contratos ou consultas aprovadas em que a imobiliária ou o locatário declinou antes ou durante a assinatura.
                 </p>
                 <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-rose-300">
                   Fórmula: Consultas com status = CONTRACT_DECLINED.
@@ -900,8 +931,8 @@ export function ReportsPage() {
                           </div>
                         </div>
 
-                        {/* Grid de Mini-Métricas da Imobiliária (Amplo em 2 por linha!) */}
-                        <div className="my-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {/* Grid de Mini-Métricas da Imobiliária (Amplo e Completo) */}
+                        <div className="my-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
                           {/* Consultas */}
                           <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
                             <div className="flex items-center justify-between text-muted-foreground">
@@ -915,6 +946,22 @@ export function ReportsPage() {
                             </strong>
                             <span className="text-[0.68rem] text-muted-foreground">
                               analisadas
+                            </span>
+                          </div>
+
+                          {/* Reprovadas */}
+                          <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-3.5">
+                            <div className="flex items-center justify-between text-amber-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Reprovadas
+                              </span>
+                              <ShieldAlert className="size-4" />
+                            </div>
+                            <strong className="mt-1.5 block text-xl font-bold text-amber-900">
+                              {item.rejectedApplications?.count ?? 0}
+                            </strong>
+                            <span className="text-[0.68rem] text-amber-700">
+                              {item.rejectedApplications?.rate ?? 0}% das consultas
                             </span>
                           </div>
 
@@ -935,7 +982,7 @@ export function ReportsPage() {
                           </div>
 
                           {/* Contratos Assinados (Destaque Principal) */}
-                          <div className="col-span-2 sm:col-span-1 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 shadow-xs">
+                          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 shadow-xs">
                             <div className="flex items-center justify-between text-emerald-800">
                               <span className="text-[0.68rem] font-bold uppercase tracking-wider text-emerald-900">
                                 Assinados
@@ -952,6 +999,22 @@ export function ReportsPage() {
                             </span>
                           </div>
 
+                          {/* Reprovado por Imobiliária */}
+                          <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-3.5">
+                            <div className="flex items-center justify-between text-rose-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
+                                Reprovado Imob.
+                              </span>
+                              <UserX className="size-4" />
+                            </div>
+                            <strong className="mt-1.5 block text-base font-bold text-rose-900">
+                              {item.declinedContracts.count}
+                            </strong>
+                            <span className="text-[0.68rem] text-rose-700 truncate block">
+                              {formatCurrency(item.declinedContracts.totalValue)}
+                            </span>
+                          </div>
+
                           {/* Ticket Médio */}
                           <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
                             <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -965,21 +1028,8 @@ export function ReportsPage() {
                             </span>
                           </div>
 
-                          {/* Declinados */}
-                          <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-3.5">
-                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
-                              Declinados
-                            </span>
-                            <strong className="mt-1.5 block text-base font-bold text-rose-900">
-                              {item.declinedContracts.count}
-                            </strong>
-                            <span className="text-[0.68rem] text-rose-700 truncate block">
-                              {formatCurrency(item.declinedContracts.totalValue)}
-                            </span>
-                          </div>
-
                           {/* Conversão Geral */}
-                          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3.5 flex flex-col justify-between">
+                          <div className="col-span-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3.5 flex flex-col justify-between">
                             <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-indigo-700">
                               Conversão
                             </span>
@@ -1038,6 +1088,9 @@ export function ReportsPage() {
                     <TableHead className="text-center font-semibold text-foreground">
                       Consultas
                     </TableHead>
+                    <TableHead className="text-center font-semibold text-amber-700">
+                      Reprovadas
+                    </TableHead>
                     <TableHead className="font-semibold text-foreground">
                       Contratos Gerados
                     </TableHead>
@@ -1047,8 +1100,8 @@ export function ReportsPage() {
                     <TableHead className="font-semibold text-foreground">
                       Share Doculoc (% Assinados)
                     </TableHead>
-                    <TableHead className="font-semibold text-foreground">
-                      Contratos Declinados
+                    <TableHead className="font-semibold text-rose-700">
+                      Reprovado Imobiliária
                     </TableHead>
                     <TableHead className="font-semibold text-foreground">
                       Ticket Médio
@@ -1079,6 +1132,16 @@ export function ReportsPage() {
                         <Badge variant="outline" className="font-semibold">
                           {item.totalApplications}
                         </Badge>
+                      </TableCell>
+
+                      {/* Reprovadas */}
+                      <TableCell className="text-center">
+                        <div className="font-semibold text-amber-700">
+                          {item.rejectedApplications?.count ?? 0}
+                        </div>
+                        <div className="text-[0.68rem] text-muted-foreground">
+                          {item.rejectedApplications?.rate ?? 0}%
+                        </div>
                       </TableCell>
 
                       {/* Contratos Gerados */}

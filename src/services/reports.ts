@@ -6,6 +6,11 @@ export interface RealEstateReportItem {
   email: string;
   document: string | null;
   totalApplications: number;
+  rejectedApplications: {
+    count: number;
+    totalValue: number;
+    rate: number;
+  };
   generatedContracts: {
     count: number;
     totalValue: number;
@@ -32,6 +37,11 @@ export interface ReportsSummaryResponse {
   };
   doculocGlobal: {
     totalApplications: number;
+    totalRejectedApplications: {
+      count: number;
+      totalValue: number;
+      rate: number;
+    };
     totalGeneratedContracts: {
       count: number;
       totalValue: number;
@@ -43,6 +53,11 @@ export interface ReportsSummaryResponse {
   };
   totals: {
     totalApplications: number;
+    rejectedApplications: {
+      count: number;
+      totalValue: number;
+      rate: number;
+    };
     generatedContracts: {
       count: number;
       totalValue: number;
