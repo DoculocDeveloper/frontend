@@ -195,7 +195,11 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
       (application.status === "WAITING_REAL_ESTATE_RETURN" &&
         application.previousStatus === "WAITING_CONTRACT_DATA") ||
       isEditingContract);
-  const canGenerateContract = isAdmin && application.status === "WAITING_ADMIN_CONTRACT";
+  const canGenerateContract =
+    isAdmin &&
+    (application.status === "WAITING_ADMIN_CONTRACT" ||
+      (application.status === "WAITING_REAL_ESTATE_RETURN" &&
+        application.previousStatus === "WAITING_ADMIN_CONTRACT"));
   const canAdminDecide = isAdmin && ["CONSULTED", "REJECTED", "CONTESTED"].includes(application.status);
   const contract = application.contract;
   const isContractGenerated =
