@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Ban, FileX, Loader2, RotateCcw } from "lucide-react";
+import { Ban, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -102,8 +102,8 @@ export function ReopenContractDataDialog({
           variant="outline"
           className="text-amber-700 hover:text-amber-800 hover:bg-amber-50 border-amber-200"
         >
-          <FileX className="size-4" />
-          Cancelar contrato
+          <RotateCcw className="size-4 mr-1.5" />
+          Reabrir para edição
         </Button>
       </DialogTrigger>
       <DialogContent>
