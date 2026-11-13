@@ -424,9 +424,9 @@ export function ReportsPage() {
             }
           />
 
-          {/* Reprovado por Imobiliária */}
+          {/* Declinado pelo Locatário */}
           <MetricCard
-            label="Reprovado por Imobiliária"
+            label="Declinado pelo Locatário"
             value={totals.declinedContracts.count}
             description={`Total: ${formatCurrency(
               totals.declinedContracts.totalValue
@@ -434,9 +434,9 @@ export function ReportsPage() {
             icon={<UserX className="size-4.5 text-rose-600" />}
             tooltip={
               <div className="space-y-1.5">
-                <p className="font-semibold text-rose-400">Reprovado por Imobiliária</p>
+                <p className="font-semibold text-rose-400">Declinado pelo Locatário</p>
                 <p className="text-stone-300">
-                  Contratos ou consultas aprovadas em que a imobiliária ou o locatário declinou antes ou durante a assinatura.
+                  Contratos ou consultas aprovadas em que o locatário declinou antes ou durante a assinatura.
                 </p>
                 <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-rose-300">
                   Fórmula: Consultas com status = CONTRACT_DECLINED.
@@ -999,11 +999,11 @@ export function ReportsPage() {
                             </span>
                           </div>
 
-                          {/* Reprovado por Imobiliária */}
+                          {/* Declinado pelo Locatário */}
                           <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-3">
                             <div className="flex items-center justify-between text-rose-700">
                               <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
-                                Reprovado Imob.
+                                Declinado Locatário
                               </span>
                               <UserX className="size-4 shrink-0" />
                             </div>
@@ -1125,7 +1125,7 @@ export function ReportsPage() {
                       Share Doculoc (% Assinados)
                     </TableHead>
                     <TableHead className="font-semibold text-rose-700">
-                      Reprovado Imobiliária
+                      Declinado Locatário
                     </TableHead>
                     <TableHead className="font-semibold text-foreground">
                       Ticket Médio
