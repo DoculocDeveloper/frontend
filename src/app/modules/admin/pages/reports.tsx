@@ -931,131 +931,155 @@ export function ReportsPage() {
                           </div>
                         </div>
 
-                        {/* Grid de Mini-Métricas da Imobiliária (Amplo e Completo) */}
-                        <div className="my-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Grid de Mini-Métricas da Imobiliária (Perfeitamente Simétrico 4x2) */}
+                        <div className="my-4 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                           {/* Consultas */}
-                          <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
                             <div className="flex items-center justify-between text-muted-foreground">
                               <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                 Consultas
                               </span>
-                              <ClipboardList className="size-4" />
+                              <ClipboardList className="size-4 shrink-0" />
                             </div>
-                            <strong className="mt-1.5 block text-xl font-bold text-foreground">
+                            <strong className="my-0.5 block text-xl font-bold text-foreground">
                               {item.totalApplications}
                             </strong>
-                            <span className="text-[0.68rem] text-muted-foreground">
+                            <span className="text-[0.68rem] text-muted-foreground truncate">
                               analisadas
                             </span>
                           </div>
 
                           {/* Reprovadas */}
-                          <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-3.5">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-amber-100 bg-amber-50/40 p-3">
                             <div className="flex items-center justify-between text-amber-700">
                               <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                 Reprovadas
                               </span>
-                              <ShieldAlert className="size-4" />
+                              <ShieldAlert className="size-4 shrink-0" />
                             </div>
-                            <strong className="mt-1.5 block text-xl font-bold text-amber-900">
+                            <strong className="my-0.5 block text-xl font-bold text-amber-900">
                               {item.rejectedApplications?.count ?? 0}
                             </strong>
-                            <span className="text-[0.68rem] text-amber-700">
-                              {item.rejectedApplications?.rate ?? 0}% das consultas
+                            <span className="text-[0.68rem] font-medium text-amber-700 truncate">
+                              {item.rejectedApplications?.rate ?? 0}% reprovadas
                             </span>
                           </div>
 
                           {/* Contratos Gerados */}
-                          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50/40 p-3">
                             <div className="flex items-center justify-between text-blue-700">
                               <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                 Gerados
                               </span>
-                              <CheckCircle2 className="size-4" />
+                              <CheckCircle2 className="size-4 shrink-0" />
                             </div>
-                            <strong className="mt-1.5 block text-xl font-bold text-blue-900">
+                            <strong className="my-0.5 block text-xl font-bold text-blue-900">
                               {item.generatedContracts.count}
                             </strong>
-                            <span className="text-[0.68rem] font-semibold text-blue-700 truncate block">
+                            <span className="text-[0.68rem] font-semibold text-blue-700 truncate">
                               {formatCurrency(item.generatedContracts.totalValue)}
                             </span>
                           </div>
 
                           {/* Contratos Assinados (Destaque Principal) */}
-                          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 shadow-xs">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3 shadow-xs">
                             <div className="flex items-center justify-between text-emerald-800">
                               <span className="text-[0.68rem] font-bold uppercase tracking-wider text-emerald-900">
                                 Assinados
                               </span>
-                              <Badge className="bg-emerald-600 text-white text-[0.68rem] px-1.5 py-0.2">
+                              <Badge className="bg-emerald-600 text-white text-[0.65rem] px-1 py-0">
                                 {item.signedConversionRate}%
                               </Badge>
                             </div>
-                            <strong className="mt-1.5 block text-xl font-bold text-emerald-950">
+                            <strong className="my-0.5 block text-xl font-bold text-emerald-950">
                               {item.signedContracts.count}
                             </strong>
-                            <span className="text-[0.68rem] font-bold text-emerald-700 truncate block">
+                            <span className="text-[0.68rem] font-bold text-emerald-700 truncate">
                               {formatCurrency(item.signedContracts.totalValue)}
                             </span>
                           </div>
 
                           {/* Reprovado por Imobiliária */}
-                          <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-3.5">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-3">
                             <div className="flex items-center justify-between text-rose-700">
-                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-rose-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                 Reprovado Imob.
                               </span>
-                              <UserX className="size-4" />
+                              <UserX className="size-4 shrink-0" />
                             </div>
-                            <strong className="mt-1.5 block text-base font-bold text-rose-900">
+                            <strong className="my-0.5 block text-xl font-bold text-rose-900">
                               {item.declinedContracts.count}
                             </strong>
-                            <span className="text-[0.68rem] text-rose-700 truncate block">
+                            <span className="text-[0.68rem] text-rose-700 truncate">
                               {formatCurrency(item.declinedContracts.totalValue)}
                             </span>
                           </div>
 
                           {/* Ticket Médio */}
-                          <div className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3.5">
-                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
-                              Ticket Médio
-                            </span>
-                            <strong className="mt-1.5 block text-base font-bold text-foreground whitespace-nowrap">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
+                            <div className="flex items-center justify-between text-muted-foreground">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Ticket Médio
+                              </span>
+                              <TrendingUp className="size-4 shrink-0 text-stone-500" />
+                            </div>
+                            <strong className="my-0.5 block text-lg font-bold text-foreground truncate">
                               {formatCurrency(item.averageTicket)}
                             </strong>
-                            <span className="text-[0.68rem] text-muted-foreground">
+                            <span className="text-[0.68rem] text-muted-foreground truncate">
                               por contrato gerado
                             </span>
                           </div>
 
                           {/* Conversão Geral */}
-                          <div className="col-span-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3.5 flex flex-col justify-between">
-                            <span className="text-[0.68rem] font-semibold uppercase tracking-wider text-indigo-700">
-                              Conversão
-                            </span>
-                            <strong className="mt-1.5 block text-base font-bold text-indigo-950">
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
+                            <div className="flex items-center justify-between text-indigo-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Conversão
+                              </span>
+                              <PieChart className="size-4 shrink-0" />
+                            </div>
+                            <strong className="my-0.5 block text-xl font-bold text-indigo-950">
                               {item.conversionRate}%
                             </strong>
-                            <span className="text-[0.68rem] text-indigo-700">
+                            <span className="text-[0.68rem] text-indigo-700 truncate">
                               consultas ➔ gerados
+                            </span>
+                          </div>
+
+                          {/* Eficiência de Fechamento */}
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
+                            <div className="flex items-center justify-between text-emerald-800">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Fechamento
+                              </span>
+                              <Trophy className="size-4 shrink-0 text-emerald-600" />
+                            </div>
+                            <strong className="my-0.5 block text-xl font-bold text-emerald-950">
+                              {item.signedConversionRate}%
+                            </strong>
+                            <span className="text-[0.68rem] text-emerald-700 truncate">
+                              gerados ➔ assinados
                             </span>
                           </div>
                         </div>
 
                         {/* Rodapé do Card */}
-                        <div className="flex items-center justify-between border-t pt-3.5 text-xs">
+                        <div className="flex items-center justify-between border-t pt-3 text-xs">
                           <span className="text-muted-foreground">
-                            Eficiência de Fechamento (Assinados / Gerados):
+                            Taxa Geral de Conversão (Consultas ➔ Contratos Assinados):
                           </span>
                           <Badge
-                            variant={item.signedConversionRate > 0 ? "secondary" : "outline"}
+                            variant={item.signedContracts.count > 0 ? "secondary" : "outline"}
                             className={
-                              item.signedConversionRate >= 50
+                              item.signedContracts.count > 0
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
                                 : "font-semibold"
                             }
                           >
-                            {item.signedConversionRate}% fechados
+                            {item.totalApplications > 0
+                              ? ((item.signedContracts.count / item.totalApplications) * 100).toFixed(1)
+                              : 0}% finalizados
                           </Badge>
                         </div>
                       </div>
