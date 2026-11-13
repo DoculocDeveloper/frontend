@@ -11,6 +11,11 @@ export interface RealEstateReportItem {
     totalValue: number;
     rate: number;
   };
+  onlyConsultedApplications: {
+    count: number;
+    totalValue: number;
+    rate: number;
+  };
   generatedContracts: {
     count: number;
     totalValue: number;
@@ -42,6 +47,11 @@ export interface ReportsSummaryResponse {
       totalValue: number;
       rate: number;
     };
+    totalOnlyConsultedApplications: {
+      count: number;
+      totalValue: number;
+      rate: number;
+    };
     totalGeneratedContracts: {
       count: number;
       totalValue: number;
@@ -54,6 +64,11 @@ export interface ReportsSummaryResponse {
   totals: {
     totalApplications: number;
     rejectedApplications: {
+      count: number;
+      totalValue: number;
+      rate: number;
+    };
+    onlyConsultedApplications: {
       count: number;
       totalValue: number;
       rate: number;

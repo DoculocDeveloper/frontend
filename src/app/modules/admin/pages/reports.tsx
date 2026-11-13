@@ -10,6 +10,7 @@ import {
   FilterX,
   LayoutGrid,
   PieChart,
+  Search,
   ShieldAlert,
   Table as TableIcon,
   TrendingUp,
@@ -159,6 +160,7 @@ export function ReportsPage() {
   const totals = data?.totals ?? {
     totalApplications: 0,
     rejectedApplications: { count: 0, totalValue: 0, rate: 0 },
+    onlyConsultedApplications: { count: 0, totalValue: 0, rate: 0 },
     generatedContracts: { count: 0, totalValue: 0 },
     signedContracts: { count: 0, totalValue: 0 },
     declinedContracts: { count: 0, totalValue: 0 },
@@ -310,7 +312,8 @@ export function ReportsPage() {
 
       {/* Cards de Métricas Principais com Tooltips de Fórmulas */}
       {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+          <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
           <Skeleton className="h-28 rounded-2xl" />
@@ -325,7 +328,7 @@ export function ReportsPage() {
           description="Não foi possível obter os dados do relatório. Tente novamente mais tarde."
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {/* Consultas realizadas */}
           <MetricCard
             label="Consultas Realizadas"
@@ -364,9 +367,34 @@ export function ReportsPage() {
                   Consultas que não atingiram os critérios de aprovação na análise cadastral e de crédito.
                 </p>
                 <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-amber-300">
-                  Fórmula: Consultas com status = ADMIN_REJECTED ou REJECTED.
+                  Fórmula: Consultas com status = ADMIN_REJECTED ou REJECTED (ou decisão administrativa reprovada).
                   <br />
                   Taxa = (Reprovadas ÷ Consultas Realizadas) × 100.
+                </div>
+              </div>
+            }
+          />
+
+          {/* Somente Consulta (Não gerou contrato) */}
+          <MetricCard
+            label="Somente Consulta"
+            value={totals.onlyConsultedApplications?.count ?? 0}
+            description={
+              totals.onlyConsultedApplications?.count
+                ? `${totals.onlyConsultedApplications.rate}% • Total: ${formatCurrency(
+                    totals.onlyConsultedApplications.totalValue
+                  )}`
+                : "Nenhuma no período"
+            }
+            icon={<Search className="size-4.5 text-stone-600" />}
+            tooltip={
+              <div className="space-y-1.5">
+                <p className="font-semibold text-stone-300">Somente Consulta (Sem Contrato)</p>
+                <p className="text-stone-300">
+                  Consultas realizadas que foram apenas consultadas e não avançaram para confecção de contrato nem foram reprovadas ou declinadas.
+                </p>
+                <div className="rounded bg-stone-800 p-1.5 font-mono text-[0.68rem] text-stone-300">
+                  Fórmula: Consultas Realizadas - Contratos Gerados - Reprovadas - Declinadas pelo Locatário.
                 </div>
               </div>
             }
@@ -965,6 +993,38 @@ export function ReportsPage() {
                             </span>
                           </div>
 
+                          {/* Somente Consulta (Sem Contrato) */}
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
+                            <div className="flex items-center justify-between text-stone-600">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Só Consulta
+                              </span>
+                              <Search className="size-4 shrink-0 text-stone-500" />
+                            </div>
+                            <strong className="my-0.5 block text-xl font-bold text-foreground">
+                              {item.onlyConsultedApplications?.count ?? 0}
+                            </strong>
+                            <span className="text-[0.68rem] text-muted-foreground truncate">
+                              {item.onlyConsultedApplications?.rate ?? 0}% sem contrato
+                            </span>
+                          </div>
+
+                          {/* Declinado pelo Locatário */}
+                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-3">
+                            <div className="flex items-center justify-between text-rose-700">
+                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
+                                Declinado Locatário
+                              </span>
+                              <UserX className="size-4 shrink-0" />
+                            </div>
+                            <strong className="my-0.5 block text-xl font-bold text-rose-900">
+                              {item.declinedContracts.count}
+                            </strong>
+                            <span className="text-[0.68rem] text-rose-700 truncate">
+                              {formatCurrency(item.declinedContracts.totalValue)}
+                            </span>
+                          </div>
+
                           {/* Contratos Gerados */}
                           <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50/40 p-3">
                             <div className="flex items-center justify-between text-blue-700">
@@ -999,22 +1059,6 @@ export function ReportsPage() {
                             </span>
                           </div>
 
-                          {/* Declinado pelo Locatário */}
-                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-3">
-                            <div className="flex items-center justify-between text-rose-700">
-                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
-                                Declinado Locatário
-                              </span>
-                              <UserX className="size-4 shrink-0" />
-                            </div>
-                            <strong className="my-0.5 block text-xl font-bold text-rose-900">
-                              {item.declinedContracts.count}
-                            </strong>
-                            <span className="text-[0.68rem] text-rose-700 truncate">
-                              {formatCurrency(item.declinedContracts.totalValue)}
-                            </span>
-                          </div>
-
                           {/* Ticket Médio */}
                           <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/60 p-3">
                             <div className="flex items-center justify-between text-muted-foreground">
@@ -1046,40 +1090,22 @@ export function ReportsPage() {
                               consultas ➔ gerados
                             </span>
                           </div>
-
-                          {/* Eficiência de Fechamento */}
-                          <div className="flex min-h-[92px] flex-col justify-between rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
-                            <div className="flex items-center justify-between text-emerald-800">
-                              <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
-                                Fechamento
-                              </span>
-                              <Trophy className="size-4 shrink-0 text-emerald-600" />
-                            </div>
-                            <strong className="my-0.5 block text-xl font-bold text-emerald-950">
-                              {item.signedConversionRate}%
-                            </strong>
-                            <span className="text-[0.68rem] text-emerald-700 truncate">
-                              gerados ➔ assinados
-                            </span>
-                          </div>
                         </div>
 
                         {/* Rodapé do Card */}
                         <div className="flex items-center justify-between border-t pt-3 text-xs">
                           <span className="text-muted-foreground">
-                            Taxa Geral de Conversão (Consultas ➔ Contratos Assinados):
+                            Eficiência de Fechamento (Assinados / Gerados):
                           </span>
                           <Badge
-                            variant={item.signedContracts.count > 0 ? "secondary" : "outline"}
+                            variant={item.signedConversionRate > 0 ? "secondary" : "outline"}
                             className={
-                              item.signedContracts.count > 0
+                              item.signedConversionRate >= 50
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
                                 : "font-semibold"
                             }
                           >
-                            {item.totalApplications > 0
-                              ? ((item.signedContracts.count / item.totalApplications) * 100).toFixed(1)
-                              : 0}% finalizados
+                            {item.signedConversionRate}% fechados
                           </Badge>
                         </div>
                       </div>
@@ -1114,6 +1140,9 @@ export function ReportsPage() {
                     </TableHead>
                     <TableHead className="text-center font-semibold text-amber-700">
                       Reprovadas
+                    </TableHead>
+                    <TableHead className="text-center font-semibold text-stone-600">
+                      Só Consulta
                     </TableHead>
                     <TableHead className="font-semibold text-foreground">
                       Contratos Gerados
@@ -1165,6 +1194,16 @@ export function ReportsPage() {
                         </div>
                         <div className="text-[0.68rem] text-muted-foreground">
                           {item.rejectedApplications?.rate ?? 0}%
+                        </div>
+                      </TableCell>
+
+                      {/* Só Consulta */}
+                      <TableCell className="text-center">
+                        <div className="font-semibold text-stone-700">
+                          {item.onlyConsultedApplications?.count ?? 0}
+                        </div>
+                        <div className="text-[0.68rem] text-muted-foreground">
+                          {item.onlyConsultedApplications?.rate ?? 0}%
                         </div>
                       </TableCell>
 
