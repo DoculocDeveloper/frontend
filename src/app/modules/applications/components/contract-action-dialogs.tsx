@@ -108,10 +108,13 @@ export function ReopenContractDataDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancelar contrato e reabrir dados?</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-amber-800">
+            <RotateCcw className="size-5 text-amber-600" />
+            Reabrir dados do contrato para edição?
+          </DialogTitle>
           <DialogDescription>
-            Esta ação cancelará a versão atual do contrato (incluindo o envio para assinatura na Clicksign, se houver) e retornará a consulta para o status <strong>"Aprovado para contrato"</strong>.
-            A imobiliária poderá revisar ou editar os dados da locação antes de um novo contrato ser gerado.
+            Esta ação cancelará a versão atual gerada do contrato (incluindo o envio para assinatura na Clicksign, se houver) e retornará a consulta para o status <strong>"Aprovado para contrato"</strong>.
+            A imobiliária poderá revisar ou editar livremente os dados da locação antes de um novo contrato ser gerado.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 gap-2 sm:gap-0">
@@ -119,12 +122,12 @@ export function ReopenContractDataDialog({
             Voltar
           </Button>
           <Button
-            variant="destructive"
+            className="bg-amber-600 hover:bg-amber-700 text-white"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
           >
-            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Cancelar e reabrir dados
+            {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4 mr-1.5" />}
+            Confirmar e reabrir para edição
           </Button>
         </DialogFooter>
       </DialogContent>
