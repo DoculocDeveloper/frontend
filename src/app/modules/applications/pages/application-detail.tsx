@@ -201,9 +201,9 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
   const isContractGenerated =
     (application.status === "CONTRACT_GENERATED" ||
       (application.status === "WAITING_REAL_ESTATE_RETURN" &&
-        application.previousStatus === "CONTRACT_GENERATED") ||
-      Boolean(contract?.id)) &&
-    Boolean(contract?.id);
+        application.previousStatus === "CONTRACT_GENERATED")) &&
+    Boolean(contract?.id) &&
+    contract?.status !== "PENDING";
   const canDownload = isContractGenerated;
   const canSendSignature =
     isContractGenerated &&

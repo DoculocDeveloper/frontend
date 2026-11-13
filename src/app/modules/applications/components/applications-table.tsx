@@ -52,7 +52,12 @@ function ApplicationMobileCard({
   onDownloadSignedContract?: (application: RentalApplication) => void;
   onViewApplication?: (application: RentalApplication) => void;
 }) {
-  const hasContract = Boolean(application.contract?.id);
+  const hasContract =
+    (application.status === "CONTRACT_GENERATED" ||
+      (application.status === "WAITING_REAL_ESTATE_RETURN" &&
+        application.previousStatus === "CONTRACT_GENERATED")) &&
+    Boolean(application.contract?.id) &&
+    application.contract?.status !== "PENDING";
   const isSigned = application.contract?.signatureStatus === "SIGNED";
   const requester = application.requester;
   const requesterName = requester?.realEstateProfile?.name ?? requester?.name ?? "-";
@@ -345,7 +350,12 @@ export function ApplicationsTable({
         header: () => <div className="text-right pr-4">Ações</div>,
         cell: ({ row }) => {
           const application = row.original;
-          const hasContract = Boolean(application.contract?.id);
+          const hasContract =
+    (application.status === "CONTRACT_GENERATED" ||
+      (application.status === "WAITING_REAL_ESTATE_RETURN" &&
+        application.previousStatus === "CONTRACT_GENERATED")) &&
+    Boolean(application.contract?.id) &&
+    application.contract?.status !== "PENDING";
           const isSigned = application.contract?.signatureStatus === "SIGNED";
           const hasUnreadChat =
             !isSeller &&
