@@ -5,6 +5,7 @@ import {
   BarChart3,
   Building2,
   CheckCircle2,
+  ChevronRight,
   ClipboardList,
   FileCheck2,
   FilterX,
@@ -17,6 +18,8 @@ import {
   Trophy,
   UserX,
 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -997,26 +1000,42 @@ export function ReportsPage() {
                     return (
                       <div
                         key={item.id}
-                        className="flex flex-col justify-between rounded-3xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                        className="group relative flex flex-col justify-between rounded-3xl border border-stone-200/80 bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-xl"
                       >
-                        {/* Cabeçalho do Card */}
-                        <div className="space-y-3 border-b pb-4">
+                        {/* Cabeçalho do Card com Ranking e Identificação */}
+                        <div className="space-y-3 border-b border-stone-100 pb-4">
                           <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                {isTop ? (
-                                  <Trophy className="size-5 shrink-0 text-amber-500" />
-                                ) : (
-                                  <Building2 className="size-5 shrink-0 text-muted-foreground" />
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <div
+                                className={cn(
+                                  "flex size-10 sm:size-11 shrink-0 items-center justify-center rounded-2xl font-bold text-sm",
+                                  isTop
+                                    ? "bg-amber-100 text-amber-700 ring-2 ring-amber-400/30"
+                                    : "bg-stone-100 text-stone-600"
                                 )}
-                                <h3 className="truncate font-bold text-foreground text-lg sm:text-xl">
+                              >
+                                {isTop ? (
+                                  <Trophy className="size-5 text-amber-600" />
+                                ) : (
+                                  `#${globalIndex + 1}`
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h3
+                                  className="truncate font-bold text-foreground text-lg sm:text-xl transition-colors hover:text-primary cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedRealEstateId(item.id);
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                  }}
+                                  title="Clique para filtrar esta imobiliária"
+                                >
                                   {item.name}
                                 </h3>
+                                <p className="truncate text-xs text-muted-foreground mt-0.5">
+                                  {item.email}
+                                  {item.document && ` • ${formatDocument(item.document)}`}
+                                </p>
                               </div>
-                              <p className="truncate text-xs text-muted-foreground mt-1">
-                                {item.email}
-                                {item.document && ` • ${formatDocument(item.document)}`}
-                              </p>
                             </div>
 
                             {/* Badge de Share Doculoc */}
@@ -1024,14 +1043,15 @@ export function ReportsPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Badge
-                                    className={`shrink-0 cursor-help font-bold text-xs py-1 px-2.5 ${
+                                    className={cn(
+                                      "shrink-0 cursor-help font-bold text-xs py-1 px-2.5 transition-transform hover:scale-105",
                                       item.signedContracts.count > 0
-                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                                         : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                                    }`}
+                                    )}
                                   >
                                     <PieChart className="mr-1 size-3.5" />
-                                    {item.signedSharePercentage}%
+                                    {item.signedSharePercentage}% Share
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-xs text-xs p-3 leading-relaxed bg-stone-900 text-stone-100 border border-stone-800">
@@ -1057,9 +1077,9 @@ export function ReportsPage() {
                                 {item.signedContracts.count} de {doculocGlobal.totalSignedContracts.count} assinados
                               </span>
                             </div>
-                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-stone-100">
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
                               <div
-                                className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                                 style={{
                                   width: `${Math.min(item.signedSharePercentage, 100)}%`,
                                 }}
@@ -1068,7 +1088,7 @@ export function ReportsPage() {
                           </div>
                         </div>
 
-                        {/* Mini-Métricas da Imobiliária Organizadas por Etapa */}
+                        {/* Métricas da Imobiliária Organizadas com Clareza */}
                         {(() => {
                           const itemOnlyCount =
                             item.onlyConsultedApplications?.count ??
@@ -1086,147 +1106,162 @@ export function ReportsPage() {
                               : 0);
 
                           return (
-                            <div className="my-3.5 space-y-2.5">
-                              {/* 1. Triagem Cadastral (3 colunas equilibradas) */}
-                              <div className="rounded-2xl border border-stone-200/80 bg-stone-50/50 p-3">
-                                <div className="mb-2 flex items-center justify-between text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <ClipboardList className="size-3 text-primary" />
-                                    Triagem Cadastral
-                                  </span>
-                                  <span className="font-normal text-stone-500">
-                                    {item.totalApplications} {item.totalApplications === 1 ? "consulta" : "consultas"}
+                            <div className="my-4 space-y-3">
+                              {/* 1. Triagem Cadastral (Painel de 3 colunas limpas) */}
+                              <div className="grid grid-cols-3 gap-2.5 rounded-2xl bg-stone-50/70 p-3 border border-stone-200/60">
+                                {/* Total Consultas */}
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <ClipboardList className="size-3 text-stone-500" />
+                                    <span>Consultas</span>
+                                  </div>
+                                  <strong className="block text-xl font-bold text-foreground">
+                                    {item.totalApplications}
+                                  </strong>
+                                  <span className="text-[0.68rem] text-muted-foreground block">
+                                    analisadas
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                  {/* Consultas */}
-                                  <div className="rounded-xl border bg-white p-2.5">
-                                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground block">
-                                      Total
-                                    </span>
-                                    <strong className="my-0.5 block text-lg font-bold text-foreground">
-                                      {item.totalApplications}
-                                    </strong>
-                                    <span className="text-[0.65rem] text-muted-foreground block">
-                                      analisadas
-                                    </span>
-                                  </div>
 
-                                  {/* Reprovadas */}
-                                  <div className="rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5">
-                                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-amber-800 block">
-                                      Reprovadas
-                                    </span>
-                                    <strong className="my-0.5 block text-lg font-bold text-amber-900">
-                                      {item.rejectedApplications?.count ?? 0}
-                                    </strong>
-                                    <span className="text-[0.65rem] font-medium text-amber-700 block whitespace-nowrap">
-                                      {item.rejectedApplications?.rate ?? 0}% consultas
-                                    </span>
+                                {/* Reprovadas */}
+                                <div className="space-y-0.5 border-l border-stone-200/80 pl-3">
+                                  <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-amber-800">
+                                    <ShieldAlert className="size-3 text-amber-600" />
+                                    <span>Reprovadas</span>
                                   </div>
+                                  <strong className="block text-xl font-bold text-amber-900">
+                                    {item.rejectedApplications?.count ?? 0}
+                                  </strong>
+                                  <span className="text-[0.68rem] font-medium text-amber-700 block whitespace-nowrap">
+                                    {item.rejectedApplications?.rate ?? 0}% das consultas
+                                  </span>
+                                </div>
 
-                                  {/* Só Consulta */}
-                                  <div className="rounded-xl border border-stone-200 bg-white p-2.5">
-                                    <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-stone-600 block">
-                                      Só Consulta
-                                    </span>
-                                    <strong className="my-0.5 block text-lg font-bold text-foreground">
-                                      {itemOnlyCount}
-                                    </strong>
-                                    <span className="text-[0.65rem] text-muted-foreground block whitespace-nowrap">
-                                      {itemOnlyRate}% sem contrato
-                                    </span>
+                                {/* Só Consulta */}
+                                <div className="space-y-0.5 border-l border-stone-200/80 pl-3">
+                                  <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-stone-600">
+                                    <Search className="size-3 text-stone-500" />
+                                    <span>Só Consulta</span>
                                   </div>
+                                  <strong className="block text-xl font-bold text-foreground">
+                                    {itemOnlyCount}
+                                  </strong>
+                                  <span className="text-[0.68rem] text-muted-foreground block whitespace-nowrap">
+                                    {itemOnlyRate}% sem contrato
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* 2. Contratos & Fechamento Comercial (4 colunas respiráveis) */}
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {/* 2. Resultados Comerciais & Faturamento (4 colunas) */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                 {/* Contratos Gerados */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50/40 p-2.5">
+                                <div className="flex flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50/40 p-3">
                                   <div className="flex items-center justify-between text-blue-700">
                                     <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                       Gerados
                                     </span>
                                     <CheckCircle2 className="size-3.5 shrink-0" />
                                   </div>
-                                  <strong className="my-0.5 block text-xl font-bold text-blue-900">
-                                    {item.generatedContracts.count}
-                                  </strong>
-                                  <span className="text-[0.7rem] font-semibold text-blue-700 block whitespace-nowrap">
-                                    {formatCurrency(item.generatedContracts.totalValue)}
-                                  </span>
+                                  <div className="mt-1">
+                                    <strong className="block text-xl font-bold text-blue-900">
+                                      {item.generatedContracts.count}
+                                    </strong>
+                                    <span className="text-xs font-semibold text-blue-700 block whitespace-nowrap">
+                                      {formatCurrency(item.generatedContracts.totalValue)}
+                                    </span>
+                                  </div>
                                 </div>
 
                                 {/* Contratos Assinados (Destaque Principal) */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-2.5 shadow-xs">
+                                <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-xs ring-1 ring-emerald-500/20">
                                   <div className="flex items-center justify-between text-emerald-800">
                                     <span className="text-[0.68rem] font-bold uppercase tracking-wider text-emerald-950">
                                       Assinados
                                     </span>
-                                    <Badge className="bg-emerald-600 text-white text-[0.62rem] px-1 py-0">
+                                    <Badge className="bg-emerald-600 text-white text-[0.62rem] px-1.5 py-0">
                                       {item.signedConversionRate}%
                                     </Badge>
                                   </div>
-                                  <strong className="my-0.5 block text-xl font-bold text-emerald-950">
-                                    {item.signedContracts.count}
-                                  </strong>
-                                  <span className="text-[0.7rem] font-bold text-emerald-700 block whitespace-nowrap">
-                                    {formatCurrency(item.signedContracts.totalValue)}
-                                  </span>
+                                  <div className="mt-1">
+                                    <strong className="block text-xl font-bold text-emerald-950">
+                                      {item.signedContracts.count}
+                                    </strong>
+                                    <span className="text-xs font-bold text-emerald-700 block whitespace-nowrap">
+                                      {formatCurrency(item.signedContracts.totalValue)}
+                                    </span>
+                                  </div>
                                 </div>
 
                                 {/* Declinado Locatário */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-2.5">
+                                <div className="flex flex-col justify-between rounded-2xl border border-rose-100 bg-rose-50/40 p-3">
                                   <div className="flex items-center justify-between text-rose-700">
                                     <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                       Declinado
                                     </span>
                                     <UserX className="size-3.5 shrink-0" />
                                   </div>
-                                  <strong className="my-0.5 block text-xl font-bold text-rose-900">
-                                    {item.declinedContracts.count}
-                                  </strong>
-                                  <span className="text-[0.7rem] text-rose-700 block whitespace-nowrap">
-                                    {formatCurrency(item.declinedContracts.totalValue)}
-                                  </span>
+                                  <div className="mt-1">
+                                    <strong className="block text-xl font-bold text-rose-900">
+                                      {item.declinedContracts.count}
+                                    </strong>
+                                    <span className="text-xs text-rose-700 block whitespace-nowrap">
+                                      {formatCurrency(item.declinedContracts.totalValue)}
+                                    </span>
+                                  </div>
                                 </div>
 
                                 {/* Ticket Médio & Conversão */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-indigo-100 bg-indigo-50/40 p-2.5">
+                                <div className="flex flex-col justify-between rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
                                   <div className="flex items-center justify-between text-indigo-700">
                                     <span className="text-[0.68rem] font-semibold uppercase tracking-wider">
                                       Ticket Médio
                                     </span>
                                     <TrendingUp className="size-3.5 shrink-0 text-indigo-600" />
                                   </div>
-                                  <strong className="my-0.5 block text-base sm:text-lg font-bold text-indigo-950 whitespace-nowrap">
-                                    {formatCurrency(item.averageTicket)}
-                                  </strong>
-                                  <span className="text-[0.65rem] text-indigo-700 block whitespace-nowrap">
-                                    Conv. {item.conversionRate}%
-                                  </span>
+                                  <div className="mt-1">
+                                    <strong className="block text-base sm:text-lg font-bold text-indigo-950 whitespace-nowrap">
+                                      {formatCurrency(item.averageTicket)}
+                                    </strong>
+                                    <span className="text-[0.68rem] text-indigo-700 block whitespace-nowrap">
+                                      Conv. {item.conversionRate}%
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           );
                         })()}
 
-                        {/* Rodapé do Card */}
-                        <div className="flex items-center justify-between border-t pt-3 text-xs">
-                          <span className="text-muted-foreground">
-                            Eficiência de Fechamento (Assinados / Gerados):
-                          </span>
-                          <Badge
-                            variant={item.signedConversionRate > 0 ? "secondary" : "outline"}
-                            className={
-                              item.signedConversionRate >= 50
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
-                                : "font-semibold"
-                            }
+                        {/* Rodapé do Card com Ação Rápida */}
+                        <div className="flex items-center justify-between border-t border-stone-100 pt-3 text-xs">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <span>Fechamento:</span>
+                            <Badge
+                              variant={item.signedConversionRate > 0 ? "secondary" : "outline"}
+                              className={cn(
+                                "font-semibold text-[0.7rem] px-2 py-0.5",
+                                item.signedConversionRate >= 50
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
+                                  : ""
+                              )}
+                            >
+                              {item.signedConversionRate}% ({item.signedContracts.count} de {item.generatedContracts.count} gerados)
+                            </Badge>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedRealEstateId(item.id);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="h-7 gap-1 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary transition-colors px-2"
                           >
-                            {item.signedConversionRate}% fechados ({item.signedContracts.count} de {item.generatedContracts.count})
-                          </Badge>
+                            <span>Ver detalhes</span>
+                            <ChevronRight className="size-3.5" />
+                          </Button>
                         </div>
                       </div>
                     );
