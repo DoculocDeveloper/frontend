@@ -33,14 +33,14 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="min-w-0 max-w-3xl">
+    <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0 flex-1 max-w-3xl shrink-0 sm:shrink">
         {eyebrow ? (
           <span className="mb-3 inline-flex max-w-full items-center rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary sm:text-xs sm:tracking-[0.22em]">
             <span className="truncate">{eyebrow}</span>
           </span>
         ) : null}
-        <h1 className="max-w-full text-balance wrap-break-word text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+        <h1 className="max-w-full text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl break-normal">
           {title}
         </h1>
         {description ? (
@@ -50,7 +50,7 @@ export function PageHeader({
         ) : null}
       </div>
       {action ? (
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           {action}
         </div>
       ) : null}

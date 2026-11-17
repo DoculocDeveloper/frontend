@@ -275,7 +275,7 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
           title={formatDocument(application.document, application.documentType)}
           description={applicationStatusDescriptions[application.status]}
           action={
-            <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
               {canFillContract ? (
                 <Button
                   asChild

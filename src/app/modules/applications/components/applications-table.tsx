@@ -81,7 +81,7 @@ function ApplicationMobileCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="wrap-break-word text-base font-semibold text-foreground">
+            <p className="whitespace-nowrap text-base font-semibold text-foreground">
               {formatDocument(application.document, application.documentType)}
             </p>
             {isUnread ? (
