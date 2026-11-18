@@ -45,6 +45,7 @@ import { applicationStatusDescriptions, applicationStatusLabels } from "@/lib/st
 import { getApiErrorMessage, getApiErrorStatus } from "@/services/api";
 import {
   downloadContract,
+  downloadSignedContract,
   generateContract,
   resendContractSignatureNotification,
   restartContractSignature,
@@ -151,6 +152,20 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
     try {
       await downloadContract(application.contract.id, application.contract.fileName ?? undefined);
       toast.success("Download iniciado.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  }
+
+  async function handleDownloadSigned() {
+    if (!application?.contract?.id) return;
+
+    try {
+      await downloadSignedContract(
+        application.contract.id,
+        application.contract.fileName ?? undefined,
+      );
+      toast.success("Download do contrato assinado iniciado.");
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
@@ -320,10 +335,20 @@ export function ApplicationDetailPage({ isAdmin = false }: { isAdmin?: boolean }
                   <ReopenForEditDialog applicationId={application.id} />
                 </>
               ) : null}
-              {canDownload ? (
+              {isSigned ? (
+                <Button
+                  variant="outline"
+                  className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 font-semibold"
+                  onClick={handleDownloadSigned}
+                >
+                  <Download className="size-4 mr-1.5" />
+                  Baixar PDF assinado
+                </Button>
+              ) : null}
+              {canDownload && (!isSigned || isAdmin) ? (
                 <Button variant="outline" onClick={handleDownload}>
                   <Download className="size-4" />
-                  Baixar contrato
+                  {isSigned ? "Baixar DOCX" : "Baixar contrato"}
                 </Button>
               ) : null}
               {canSendSignature ? (
