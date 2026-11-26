@@ -90,7 +90,9 @@ export function ReportsPage() {
     queryFn: () => listRealEstates(),
   });
 
-  const realEstates = realEstatesData ?? [];
+  const realEstates = (realEstatesData ?? []).filter(
+    (re) => (re.applicationsCount ?? 0) > 0,
+  );
 
   // Busca resumo dos relatórios
   const queryParams = {
