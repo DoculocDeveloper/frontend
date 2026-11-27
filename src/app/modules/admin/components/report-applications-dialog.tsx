@@ -93,7 +93,7 @@ export function ReportApplicationsDialog({
         }
       }}
     >
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-4 p-0 overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-4xl sm:max-w-4xl max-h-[85vh] flex flex-col gap-4 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-3 border-b bg-stone-50/70">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-6">
             <div className="space-y-1">
