@@ -105,3 +105,48 @@ export async function getReportsSummary(params?: GetReportsSummaryParams) {
   });
   return response.data;
 }
+
+export type ReportApplicationCategory =
+  | "ALL"
+  | "REJECTED"
+  | "ONLY_CONSULTED"
+  | "DECLINED"
+  | "GENERATED"
+  | "SIGNED";
+
+export interface ReportApplicationItem {
+  id: string;
+  document: string;
+  documentType: "CPF" | "CNPJ";
+  tenantName?: string | null;
+  status: string;
+  value: number;
+  requestedExpense: number;
+  rentValue: number;
+  createdAt: string;
+  requesterName: string;
+  contract?: {
+    id: string;
+    signatureStatus?: string | null;
+    signedAt?: string | null;
+  } | null;
+}
+
+export interface GetReportApplicationsResponse {
+  total: number;
+  totalValue: number;
+  applications: ReportApplicationItem[];
+}
+
+export async function getReportApplications(params: {
+  category: ReportApplicationCategory;
+  startDate?: string;
+  endDate?: string;
+  requesterId?: string;
+}) {
+  const response = await api.get<GetReportApplicationsResponse>(
+    "/reports/applications",
+    { params },
+  );
+  return response.data;
+}

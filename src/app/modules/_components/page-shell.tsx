@@ -88,6 +88,7 @@ export function MetricCard({
   className,
   valueClassName,
   tooltip,
+  onClick,
 }: {
   label: string;
   value: string | number;
@@ -97,6 +98,7 @@ export function MetricCard({
   className?: string;
   valueClassName?: string;
   tooltip?: ReactNode;
+  onClick?: () => void;
 }) {
   const isStringValue = typeof value === "string";
   const isCurrency = isStringValue && value.includes("R$");
@@ -104,8 +106,22 @@ export function MetricCard({
 
   return (
     <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "flashlight-card group min-w-0 rounded-2xl bg-white/80 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl sm:rounded-3xl sm:p-5",
+        onClick && "cursor-pointer hover:border-primary/40",
         className
       )}
     >
@@ -121,6 +137,7 @@ export function MetricCard({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
+                      onClick={(e) => e.stopPropagation()}
                       className="cursor-help rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0 mt-0.5"
                       aria-label="Ver fórmula e explicação"
                     >

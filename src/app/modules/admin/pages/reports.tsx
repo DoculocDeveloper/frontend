@@ -55,7 +55,14 @@ import {
 } from "@/app/modules/_components/page-shell";
 import { formatCurrency, formatDocument } from "@/lib/format";
 import { listRealEstates } from "@/services/real-estates";
-import { getReportsSummary } from "@/services/reports";
+import {
+  getReportsSummary,
+  type ReportApplicationCategory,
+} from "@/services/reports";
+import {
+  ReportApplicationsDialog,
+  type ReportModalFilter,
+} from "../components/report-applications-dialog";
 
 type DatePreset =
   | "all"
@@ -73,6 +80,7 @@ export function ReportsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>("last30");
   const [viewMode, setViewMode] = useState<ViewMode>("bi");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [modalFilter, setModalFilter] = useState<ReportModalFilter | null>(null);
   const itemsPerPage = 6;
 
   const [startDate, setStartDate] = useState<string>(() => {
@@ -204,6 +212,24 @@ export function ReportsPage() {
 
   const reportItems = data?.realEstates ?? [];
   const isIndividualFilter = selectedRealEstateId !== "ALL";
+  const selectedRealEstateName = isIndividualFilter
+    ? reportItems[0]?.name
+    : undefined;
+
+  const openReportModal = (
+    category: ReportApplicationCategory,
+    title: string,
+    requester?: { id: string; name: string }
+  ) => {
+    setModalFilter({
+      category,
+      title,
+      requesterId:
+        requester?.id ??
+        (selectedRealEstateId !== "ALL" ? selectedRealEstateId : undefined),
+      requesterName: requester?.name ?? selectedRealEstateName,
+    });
+  };
 
   return (
     <PageShell>
@@ -377,6 +403,7 @@ export function ReportsPage() {
                 value={totals.totalApplications}
                 description="No período selecionado"
                 icon={<ClipboardList className="size-4.5" />}
+                onClick={() => openReportModal("ALL", "Consultas Realizadas")}
                 tooltip={
                   <div className="space-y-1.5">
                     <p className="font-semibold text-white">Consultas Realizadas</p>
@@ -402,6 +429,7 @@ export function ReportsPage() {
                     : "Nenhuma no período"
                 }
                 icon={<ShieldAlert className="size-4.5 text-amber-600" />}
+                onClick={() => openReportModal("REJECTED", "Consultas Reprovadas")}
                 tooltip={
                   <div className="space-y-1.5">
                     <p className="font-semibold text-amber-400">Consultas Reprovadas</p>
@@ -427,6 +455,7 @@ export function ReportsPage() {
                     : "Nenhuma no período"
                 }
                 icon={<Search className="size-4.5 text-stone-600" />}
+                onClick={() => openReportModal("ONLY_CONSULTED", "Somente Consulta")}
                 tooltip={
                   <div className="space-y-1.5">
                     <p className="font-semibold text-stone-300">Somente Consulta (Sem Contrato)</p>
@@ -450,6 +479,7 @@ export function ReportsPage() {
                     : "Nenhum no período"
                 }
                 icon={<UserX className="size-4.5 text-rose-600" />}
+                onClick={() => openReportModal("DECLINED", "Declinado pelo Locatário")}
                 tooltip={
                   <div className="space-y-1.5">
                     <p className="font-semibold text-rose-400">Declinado pelo Locatário</p>
@@ -487,6 +517,7 @@ export function ReportsPage() {
                   totals.generatedContracts.totalValue
                 )} • ${totals.conversionRate}% conversão`}
                 icon={<CheckCircle2 className="size-4.5 text-blue-600" />}
+                onClick={() => openReportModal("GENERATED", "Contratos Gerados")}
                 tooltip={
                   <div className="space-y-1.5">
                     <p className="font-semibold text-white">Contratos Gerados</p>
@@ -508,6 +539,7 @@ export function ReportsPage() {
                 value={totals.signedContracts.count}
                 valueClassName="text-emerald-700"
                 className="border-emerald-200/80 bg-emerald-50/20"
+                onClick={() => openReportModal("SIGNED", "Contratos Assinados")}
                 description={
                   isIndividualFilter
                     ? `${totals.signedSharePercentage}% da Doculoc (${formatCurrency(
@@ -579,7 +611,18 @@ export function ReportsPage() {
 
           <div className="grid gap-3 sm:grid-cols-3">
             {/* Topo: Consultas */}
-            <div className="relative flex flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/70 p-4">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => openReportModal("ALL", "1. Consultas")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openReportModal("ALL", "1. Consultas");
+                }
+              }}
+              className="relative flex cursor-pointer flex-col justify-between rounded-2xl border border-stone-200/80 bg-stone-50/70 p-4 transition-all hover:border-stone-400 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   1. Consultas
@@ -600,7 +643,18 @@ export function ReportsPage() {
             </div>
 
             {/* Meio: Contratos Gerados */}
-            <div className="relative flex flex-col justify-between rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => openReportModal("GENERATED", "2. Contratos Gerados")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openReportModal("GENERATED", "2. Contratos Gerados");
+                }
+              }}
+              className="relative flex cursor-pointer flex-col justify-between rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4 transition-all hover:border-blue-400 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-blue-700">
                   2. Contratos Gerados
@@ -626,7 +680,18 @@ export function ReportsPage() {
             </div>
 
             {/* Fundo: Contratos Assinados (Receita) */}
-            <div className="relative flex flex-col justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50/50 p-4 shadow-xs">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => openReportModal("SIGNED", "3. Contratos Assinados")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openReportModal("SIGNED", "3. Contratos Assinados");
+                }
+              }}
+              className="relative flex cursor-pointer flex-col justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50/50 p-4 shadow-xs transition-all hover:border-emerald-400 hover:shadow-md"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
                   3. Contratos Assinados
@@ -821,7 +886,18 @@ export function ReportsPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {/* Consultas */}
-                      <div className="rounded-xl border bg-white p-3.5">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openReportModal("ALL", "Total de Consultas", { id: item.id, name: item.name })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openReportModal("ALL", "Total de Consultas", { id: item.id, name: item.name });
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border bg-white p-3.5 transition-all hover:border-primary/40 hover:shadow-sm"
+                      >
                         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
                           Total de Consultas
                         </span>
@@ -834,7 +910,18 @@ export function ReportsPage() {
                       </div>
 
                       {/* Reprovadas */}
-                      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openReportModal("REJECTED", "Consultas Reprovadas", { id: item.id, name: item.name })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openReportModal("REJECTED", "Consultas Reprovadas", { id: item.id, name: item.name });
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 transition-all hover:border-amber-400 hover:shadow-sm"
+                      >
                         <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 block">
                           Consultas Reprovadas
                         </span>
@@ -864,7 +951,18 @@ export function ReportsPage() {
                             : 0);
 
                         return (
-                          <div className="rounded-xl border border-stone-200 bg-white p-3.5">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => openReportModal("ONLY_CONSULTED", "Somente Consulta", { id: item.id, name: item.name })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                openReportModal("ONLY_CONSULTED", "Somente Consulta", { id: item.id, name: item.name });
+                              }
+                            }}
+                            className="cursor-pointer rounded-xl border border-stone-200 bg-white p-3.5 transition-all hover:border-stone-400 hover:shadow-sm"
+                          >
                             <span className="text-xs font-semibold uppercase tracking-wider text-stone-600 block">
                               Somente Consulta
                             </span>
@@ -883,7 +981,18 @@ export function ReportsPage() {
                   {/* Seção 2: Contratos & Resultados Financeiros */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                     {/* Gerados */}
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 flex flex-col justify-between">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openReportModal("GENERATED", "Contratos Gerados", { id: item.id, name: item.name })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openReportModal("GENERATED", "Contratos Gerados", { id: item.id, name: item.name });
+                        }
+                      }}
+                      className="cursor-pointer rounded-2xl border border-blue-100 bg-blue-50/40 p-4 flex flex-col justify-between transition-all hover:border-blue-300 hover:shadow-sm"
+                    >
                       <div className="flex items-center justify-between text-blue-700">
                         <span className="text-xs font-semibold uppercase tracking-wider">
                           Gerados
@@ -899,7 +1008,18 @@ export function ReportsPage() {
                     </div>
 
                     {/* Assinados (Destaque) */}
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs flex flex-col justify-between">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openReportModal("SIGNED", "Contratos Assinados", { id: item.id, name: item.name })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openReportModal("SIGNED", "Contratos Assinados", { id: item.id, name: item.name });
+                        }
+                      }}
+                      className="cursor-pointer rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-xs flex flex-col justify-between transition-all hover:border-emerald-400 hover:shadow-sm"
+                    >
                       <div className="flex items-center justify-between text-emerald-800">
                         <span className="text-xs font-bold uppercase tracking-wider text-emerald-950">
                           Assinados
@@ -917,7 +1037,18 @@ export function ReportsPage() {
                     </div>
 
                     {/* Declinados */}
-                    <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4 flex flex-col justify-between">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openReportModal("DECLINED", "Declinado pelo Locatário", { id: item.id, name: item.name })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openReportModal("DECLINED", "Declinado pelo Locatário", { id: item.id, name: item.name });
+                        }
+                      }}
+                      className="cursor-pointer rounded-2xl border border-rose-100 bg-rose-50/40 p-4 flex flex-col justify-between transition-all hover:border-rose-300 hover:shadow-sm"
+                    >
                       <div className="flex items-center justify-between text-rose-700">
                         <span className="text-xs font-semibold uppercase tracking-wider">
                           Declinados
@@ -960,7 +1091,18 @@ export function ReportsPage() {
                       </Badge>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl border bg-white p-3 text-center">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openReportModal("ALL", "1. Consultas", { id: item.id, name: item.name })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openReportModal("ALL", "1. Consultas", { id: item.id, name: item.name });
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border bg-white p-3 text-center transition-all hover:border-primary/40 hover:shadow-sm"
+                      >
                         <span className="text-[0.68rem] text-muted-foreground uppercase font-semibold block">
                           1. Consultas
                         </span>
@@ -968,7 +1110,18 @@ export function ReportsPage() {
                           {item.totalApplications}
                         </strong>
                       </div>
-                      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-center">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openReportModal("GENERATED", "2. Contratos Gerados", { id: item.id, name: item.name })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openReportModal("GENERATED", "2. Contratos Gerados", { id: item.id, name: item.name });
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-center transition-all hover:border-blue-400 hover:shadow-sm"
+                      >
                         <span className="text-[0.68rem] text-blue-700 uppercase font-semibold block">
                           2. Gerados ({item.conversionRate}%)
                         </span>
@@ -976,7 +1129,18 @@ export function ReportsPage() {
                           {item.generatedContracts.count}
                         </strong>
                       </div>
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openReportModal("SIGNED", "3. Contratos Assinados", { id: item.id, name: item.name })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openReportModal("SIGNED", "3. Contratos Assinados", { id: item.id, name: item.name });
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center transition-all hover:border-emerald-400 hover:shadow-sm"
+                      >
                         <span className="text-[0.68rem] text-emerald-800 uppercase font-semibold block">
                           3. Assinados ({item.signedConversionRate}%)
                         </span>
@@ -1122,7 +1286,18 @@ export function ReportsPage() {
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                   {/* Total Consultas */}
-                                  <div className="space-y-1">
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => openReportModal("ALL", "Total de Consultas", { id: item.id, name: item.name })}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        openReportModal("ALL", "Total de Consultas", { id: item.id, name: item.name });
+                                      }
+                                    }}
+                                    className="cursor-pointer space-y-1 rounded-lg p-1 -m-1 transition-colors hover:bg-white"
+                                  >
                                     <span className="text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground block">
                                       Total
                                     </span>
@@ -1135,7 +1310,18 @@ export function ReportsPage() {
                                   </div>
 
                                   {/* Reprovadas */}
-                                  <div className="space-y-1 border-l border-stone-200/80 pl-3.5">
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => openReportModal("REJECTED", "Consultas Reprovadas", { id: item.id, name: item.name })}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        openReportModal("REJECTED", "Consultas Reprovadas", { id: item.id, name: item.name });
+                                      }
+                                    }}
+                                    className="cursor-pointer space-y-1 border-l border-stone-200/80 pl-3.5 rounded-r-lg py-1 -my-1 transition-colors hover:bg-white"
+                                  >
                                     <span className="text-[0.7rem] font-semibold uppercase tracking-wider text-amber-800 block">
                                       Reprovadas
                                     </span>
@@ -1148,7 +1334,18 @@ export function ReportsPage() {
                                   </div>
 
                                   {/* Só Consulta */}
-                                  <div className="space-y-1 border-l border-stone-200/80 pl-3.5">
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => openReportModal("ONLY_CONSULTED", "Somente Consulta", { id: item.id, name: item.name })}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        openReportModal("ONLY_CONSULTED", "Somente Consulta", { id: item.id, name: item.name });
+                                      }
+                                    }}
+                                    className="cursor-pointer space-y-1 border-l border-stone-200/80 pl-3.5 rounded-r-lg py-1 -my-1 transition-colors hover:bg-white"
+                                  >
                                     <span className="text-[0.7rem] font-semibold uppercase tracking-wider text-stone-600 block">
                                       Só Consulta
                                     </span>
@@ -1165,7 +1362,18 @@ export function ReportsPage() {
                               {/* 2. Contratos & Fechamento Comercial (2x2 espaçoso, sem aperto ou transbordo) */}
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {/* Contratos Gerados */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-blue-100/90 bg-blue-50/40 p-3.5 min-h-[105px] transition-all hover:bg-blue-50/60">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => openReportModal("GENERATED", "Contratos Gerados", { id: item.id, name: item.name })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      openReportModal("GENERATED", "Contratos Gerados", { id: item.id, name: item.name });
+                                    }
+                                  }}
+                                  className="cursor-pointer flex flex-col justify-between rounded-2xl border border-blue-100/90 bg-blue-50/40 p-3.5 min-h-[105px] transition-all hover:border-blue-300 hover:bg-blue-50/60"
+                                >
                                   <div className="flex items-center justify-between text-blue-700">
                                     <span className="text-xs font-semibold uppercase tracking-wider">
                                       Contratos Gerados
@@ -1183,7 +1391,18 @@ export function ReportsPage() {
                                 </div>
 
                                 {/* Contratos Assinados (Destaque Principal) */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 min-h-[105px] shadow-xs ring-1 ring-emerald-500/20 transition-all hover:bg-emerald-50/90">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => openReportModal("SIGNED", "Contratos Assinados", { id: item.id, name: item.name })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      openReportModal("SIGNED", "Contratos Assinados", { id: item.id, name: item.name });
+                                    }
+                                  }}
+                                  className="cursor-pointer flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 min-h-[105px] shadow-xs ring-1 ring-emerald-500/20 transition-all hover:border-emerald-400 hover:bg-emerald-50/90"
+                                >
                                   <div className="flex items-center justify-between text-emerald-800">
                                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-950">
                                       Contratos Assinados
@@ -1203,7 +1422,18 @@ export function ReportsPage() {
                                 </div>
 
                                 {/* Declinado Locatário */}
-                                <div className="flex flex-col justify-between rounded-2xl border border-rose-100/90 bg-rose-50/40 p-3.5 min-h-[105px] transition-all hover:bg-rose-50/60">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => openReportModal("DECLINED", "Declinado pelo Locatário", { id: item.id, name: item.name })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      openReportModal("DECLINED", "Declinado pelo Locatário", { id: item.id, name: item.name });
+                                    }
+                                  }}
+                                  className="cursor-pointer flex flex-col justify-between rounded-2xl border border-rose-100/90 bg-rose-50/40 p-3.5 min-h-[105px] transition-all hover:border-rose-300 hover:bg-rose-50/60"
+                                >
                                   <div className="flex items-center justify-between text-rose-700">
                                     <span className="text-xs font-semibold uppercase tracking-wider">
                                       Declinado pelo Locatário
@@ -1464,6 +1694,13 @@ export function ReportsPage() {
           </div>
         )}
       </div>
+
+      <ReportApplicationsDialog
+        filter={modalFilter}
+        startDate={startDate}
+        endDate={endDate}
+        onClose={() => setModalFilter(null)}
+      />
     </PageShell>
   );
 }
