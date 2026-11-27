@@ -170,7 +170,7 @@ export type DecisionResponse = {
 };
 
 export type ListApplicationsParams = {
-  status?: RentalApplicationStatus | "ALL";
+  status?: RentalApplicationStatus | "ALL" | "CONTRACT_SIGNED";
   signatureStatus?: ContractSignatureStatus;
   contractView?: "PENDING" | "SIGNED" | "ALL";
   document?: string;

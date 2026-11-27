@@ -16,7 +16,10 @@ import type {
 function buildParams(params?: ListApplicationsParams) {
   const cleanParams = new URLSearchParams();
 
-  if (params?.status && params.status !== "ALL") {
+  if (params?.status === "CONTRACT_SIGNED") {
+    cleanParams.set("status", "CONTRACT_GENERATED");
+    cleanParams.set("signatureStatus", "SIGNED");
+  } else if (params?.status && params.status !== "ALL") {
     cleanParams.set("status", params.status);
   }
 

@@ -26,12 +26,15 @@ export const applicationStatusDescriptions: Record<RentalApplicationStatus, stri
   WAITING_REAL_ESTATE_RETURN: "O administrador enviou uma mensagem no chat e aguarda o retorno da imobiliária.",
 };
 
-export const statusOptions: Array<{ value: RentalApplicationStatus | "ALL"; label: string }> = [
+export type StatusFilterValue = RentalApplicationStatus | "ALL" | "CONTRACT_SIGNED";
+
+export const statusOptions: Array<{ value: StatusFilterValue; label: string }> = [
   { value: "ALL", label: "Todos os status" },
   { value: "WAITING_CONTRACT_DATA", label: applicationStatusLabels.WAITING_CONTRACT_DATA },
   { value: "WAITING_ADMIN_CONTRACT", label: applicationStatusLabels.WAITING_ADMIN_CONTRACT },
   { value: "WAITING_REAL_ESTATE_RETURN", label: applicationStatusLabels.WAITING_REAL_ESTATE_RETURN },
   { value: "CONTRACT_GENERATED", label: applicationStatusLabels.CONTRACT_GENERATED },
+  { value: "CONTRACT_SIGNED", label: "Contrato assinado" },
   { value: "REJECTED", label: applicationStatusLabels.REJECTED },
   { value: "CONTESTED", label: applicationStatusLabels.CONTESTED },
   { value: "ADMIN_REJECTED", label: applicationStatusLabels.ADMIN_REJECTED },

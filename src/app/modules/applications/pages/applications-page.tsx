@@ -22,7 +22,7 @@ import { getApiErrorMessage } from "@/services/api";
 import type { RentalApplication, RentalApplicationStatus } from "@/types/doculoc";
 import { useAuth } from "@/hooks/use-auth";
 import { normalizeRole } from "@/types/auth";
-import { statusOptions } from "@/lib/status";
+import { statusOptions, type StatusFilterValue } from "@/lib/status";
 import { ApplicationsTable } from "../components/applications-table";
 import { BulkDeclineDialog } from "../components/bulk-decline-dialog";
 
@@ -43,7 +43,7 @@ export function ApplicationsPage({
   const isSeller = normalizeRole(session?.user.role) === "SELLER";
   const [documentInput, setDocumentInput] = useState("");
   const [debouncedDocument, setDebouncedDocument] = useState("");
-  const [status, setStatus] = useState<RentalApplicationStatus | "ALL">(forcedStatus ?? "ALL");
+  const [status, setStatus] = useState<StatusFilterValue>(forcedStatus ?? "ALL");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -71,7 +71,7 @@ export function ApplicationsPage({
     refetchInterval: 5000,
   });
 
-  function handleStatusChange(value: RentalApplicationStatus | "ALL") {
+  function handleStatusChange(value: StatusFilterValue) {
     setStatus(value);
     setPage(1);
   }
@@ -138,7 +138,7 @@ export function ApplicationsPage({
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             {!forcedStatus ? (
-              <Select value={status} onValueChange={(value) => handleStatusChange(value as RentalApplicationStatus | "ALL")}>
+              <Select value={status} onValueChange={(value) => handleStatusChange(value as StatusFilterValue)}>
                 <SelectTrigger className="h-11 w-full rounded-2xl bg-white sm:w-64">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
