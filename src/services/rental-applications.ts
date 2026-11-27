@@ -341,4 +341,15 @@ export async function declineRentalApplication(
   return response.data.application;
 }
 
+export async function bulkDeclineRentalApplications(
+  applicationIds: string[],
+  reason?: string,
+) {
+  const response = await api.post<{ updatedCount: number; skippedCount: number }>(
+    "/rental-applications/bulk-decline",
+    { applicationIds, reason },
+  );
+  return response.data;
+}
+
 

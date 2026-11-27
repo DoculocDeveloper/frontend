@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -193,18 +194,57 @@ export function ApplicationsTable({
   applications,
   basePath,
   isAdmin = false,
+  selectedIds = [],
+  onSelectionChange,
   onDownloadContract,
   onDownloadSignedContract,
 }: {
   applications: RentalApplication[];
   basePath: string;
   isAdmin?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
   onDownloadContract?: (application: RentalApplication) => void;
   onDownloadSignedContract?: (application: RentalApplication) => void;
 }) {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const isSeller = normalizeRole(session?.user?.role) === "SELLER";
+  const enableSelection = isAdmin && Boolean(onSelectionChange);
+
+  const selectableApplications = useMemo(
+    () =>
+      applications.filter(
+        (app) => app.contract?.signatureStatus !== "SIGNED",
+      ),
+    [applications],
+  );
+
+  const allSelected =
+    selectableApplications.length > 0 &&
+    selectableApplications.every((app) => selectedIds.includes(app.id));
+
+  const toggleAll = (checked: boolean) => {
+    if (!onSelectionChange) return;
+    if (checked) {
+      const next = Array.from(
+        new Set([...selectedIds, ...selectableApplications.map((a) => a.id)]),
+      );
+      onSelectionChange(next);
+    } else {
+      const pageIds = new Set(selectableApplications.map((a) => a.id));
+      onSelectionChange(selectedIds.filter((id) => !pageIds.has(id)));
+    }
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    if (!onSelectionChange) return;
+    if (checked) {
+      onSelectionChange(Array.from(new Set([...selectedIds, id])));
+    } else {
+      onSelectionChange(selectedIds.filter((item) => item !== id));
+    }
+  };
 
   const handleView = (application: RentalApplication) => {
     if (isAdmin && isApplicationUnread(application)) {
@@ -422,7 +462,39 @@ export function ApplicationsTable({
 
     if (!isAdmin) return baseColumns;
 
-    baseColumns.splice(1, 0, {
+    if (enableSelection) {
+      baseColumns.unshift({
+        id: "select",
+        header: () => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={(checked) => toggleAll(Boolean(checked))}
+              aria-label="Selecionar todas as consultas da página"
+              disabled={selectableApplications.length === 0}
+            />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const app = row.original;
+          const isSigned = app.contract?.signatureStatus === "SIGNED";
+          const checked = selectedIds.includes(app.id);
+
+          return (
+            <div className="flex items-center justify-center">
+              <Checkbox
+                checked={checked}
+                disabled={isSigned}
+                onCheckedChange={(value) => toggleOne(app.id, Boolean(value))}
+                aria-label={`Selecionar consulta ${app.document}`}
+              />
+            </div>
+          );
+        },
+      });
+    }
+
+    baseColumns.splice(enableSelection ? 2 : 1, 0, {
       id: "requester",
       header: "Imobiliária",
       cell: ({ row }) => {
@@ -444,7 +516,17 @@ export function ApplicationsTable({
     });
 
     return baseColumns;
-  }, [basePath, isAdmin, isSeller, onDownloadContract, onDownloadSignedContract]);
+  }, [
+    allSelected,
+    basePath,
+    enableSelection,
+    isAdmin,
+    isSeller,
+    onDownloadContract,
+    onDownloadSignedContract,
+    selectableApplications.length,
+    selectedIds,
+  ]);
 
   const table = useReactTable({
     data: applications,

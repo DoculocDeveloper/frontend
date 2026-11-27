@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { normalizeRole } from "@/types/auth";
 import { statusOptions } from "@/lib/status";
 import { ApplicationsTable } from "../components/applications-table";
+import { BulkDeclineDialog } from "../components/bulk-decline-dialog";
 
 export function ApplicationsPage({
   isAdmin = false,
@@ -45,6 +46,7 @@ export function ApplicationsPage({
   const [status, setStatus] = useState<RentalApplicationStatus | "ALL">(forcedStatus ?? "ALL");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const basePath = isAdmin ? "/admin" : "/real_estate";
 
   useEffect(() => {
@@ -165,10 +167,41 @@ export function ApplicationsPage({
         </div>
       ) : applications.length > 0 ? (
         <>
+          {isAdmin && selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 px-4 py-3 shadow-xs">
+              <div className="flex items-center gap-2 text-sm font-medium text-rose-900">
+                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-600 px-2 text-xs font-semibold text-white">
+                  {selectedIds.length}
+                </span>
+                <span>
+                  {selectedIds.length === 1
+                    ? "consulta selecionada"
+                    : "consultas selecionadas"}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <BulkDeclineDialog
+                  selectedIds={selectedIds}
+                  onSuccess={() => setSelectedIds([])}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setSelectedIds([])}
+                >
+                  Limpar seleção
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           <ApplicationsTable
             applications={applications}
             basePath={basePath}
             isAdmin={isAdmin}
+            selectedIds={selectedIds}
+            onSelectionChange={isAdmin ? setSelectedIds : undefined}
             onDownloadContract={handleDownload}
           />
 
